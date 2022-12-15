@@ -10,7 +10,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.66"
 clap = { version = "4.0.26", features = ["derive"] }
-phoenix-sdk = { git = "https://github.com/Ellipsis-Labs/phoenix-sdk", branch = "master" }
+phoenix-sdk = { path = "../phoenix-sdk/rust/phoenix-sdk" }
 phoenix = { path = "../phoenix/program", features = ["no-entrypoint"] }
 lib-sokoban = "0.2.4" 
 shellexpand = "2.1.2"
@@ -25,5 +25,5 @@ spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 spl-associated-token-account = { version = "1.1.1", features = [ "no-entrypoint" ] } 
-phoenix-types = { git = "https://github.com/Ellipsis-Labs/phoenix-types", branch = "master" }
+phoenix-types = { path = "../phoenix-types" }
 devnet-token-faucet = { git = "https://github.com/Ellipsis-Labs/devnet-token-faucet" }
