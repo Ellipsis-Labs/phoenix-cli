@@ -61,6 +61,7 @@ pub enum Command {
         #[clap(short, long, required = true)]
         trader_pubkey: Pubkey,
     },
+    /// Request a seat for a given market and trader. Note that the seat will have to then be approved by the market authority.
     RequestSeat { 
         #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
