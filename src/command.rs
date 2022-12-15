@@ -61,6 +61,12 @@ pub enum Command {
         #[clap(short, long, required = true)]
         trader_pubkey: Pubkey,
     },
+    RequestSeat { 
+        #[clap(short, long, required = true)]
+        market_pubkey: Pubkey,
+        #[clap(short, long, required = true)]
+        trader_pubkey: Pubkey,
+    },
     /// Mint tokens to a recipient for a given ticker string. Default amount is 100_000_000_000.
     /// Devnet only
     MintTokens {

@@ -7,6 +7,7 @@ use crate::processor::{
     process_get_market::*, process_get_market_status::*, process_get_open_orders::*,
     process_get_seat_info::*, process_get_top_of_book::*, process_get_traders_for_market::*,
     process_get_transaction::*, process_mint_tokens::*, process_mint_tokens_for_market::*,
+    process_request_seat::*,
 };
 use anyhow::anyhow;
 use clap::Parser;
@@ -114,6 +115,10 @@ async fn main() -> anyhow::Result<()> {
         } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_open_orders(&market_pubkey, &trader_pubkey, &sdk).await
+        }
+        Command::RequestSeat { market_pubkey, trader_pubkey } =>  { 
+            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
+            process_request_seat(&market_pubkey, &trader_pubkey, &sdk).await
         }
         Command::MintTokens {
             mint_ticker,
