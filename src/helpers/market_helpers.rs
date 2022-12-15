@@ -1,12 +1,9 @@
 use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
 use ellipsis_client::EllipsisClient;
-use phoenix::program::status::SeatApprovalStatus;
 use phoenix_sdk::sdk_client::*;
-use phoenix_types::dispatch::load_with_dispatch_mut;
+use phoenix_types::dispatch::load_with_dispatch;
 use phoenix_types::market::Ladder;
-use phoenix_types::enums::Side;
-use phoenix_types::market::LadderOrder;
+use phoenix_types as phoenix; 
 use phoenix_types::market::MarketHeader;
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig};
@@ -23,54 +20,17 @@ pub fn get_discriminant(type_name: &str) -> anyhow::Result<u64> {
     ))
 }
 
-pub fn get_seat_status(
+pub async fn get_seat_status(
     sdk: &SDKClient,
     seat_key: &Pubkey,
-) -> anyhow::Result<phoenix::program::status::SeatApprovalStatus> {
-    // Get discriminant for seat account
-    let seat_account_discriminant = get_discriminant("phoenix::program::accounts::Seat")?;
-
-    let statuses = vec![
-        SeatApprovalStatus::Retired,
-        SeatApprovalStatus::Approved,
-        SeatApprovalStatus::NotApproved,
-    ];
-
-    for status in statuses {
-        // Get Program Accounts, filtering for the market account discriminant
-        let memcmp = RpcFilterType::Memcmp(Memcmp::new_raw_bytes(
-            0,
-            [
-                seat_account_discriminant.to_le_bytes().to_vec(),
-                sdk.active_market_key.to_bytes().to_vec(),
-            ]
-            .concat(),
-        ));
-
-        let status_filter = RpcFilterType::Memcmp(Memcmp::new_raw_bytes(72, status.try_to_vec()?));
-
-        let config = RpcProgramAccountsConfig {
-            filters: Some(vec![memcmp, status_filter]),
-            account_config: RpcAccountInfoConfig {
-                encoding: Some(UiAccountEncoding::Base64),
-                commitment: Some(CommitmentConfig::confirmed()),
-                ..RpcAccountInfoConfig::default()
-            },
-            ..RpcProgramAccountsConfig::default()
-        };
-
-        let accounts = sdk
-            .client
-            .get_program_accounts_with_config(&phoenix::id(), config)?;
-
-        for (key, _) in accounts {
-            if key == *seat_key {
-                return Ok(status);
-            }
-        }
-    }
-
-    Ok(SeatApprovalStatus::NotApproved)
+) -> anyhow::Result<phoenix_types::market::SeatApprovalStatus> {
+    // Get seat account and deserialize
+    let seat_acc = sdk.client.get_account(&seat_key).await?;
+    let mut seat_acc_data = seat_acc.data.to_vec();
+    let (_, seat_approval_bytes) = seat_acc_data.split_at_mut(72);
+    let status_as_u64  = u64::try_from_slice(&seat_approval_bytes[0..8])?;
+    let seat_status = phoenix_types::market::SeatApprovalStatus::from(status_as_u64);
+    Ok(seat_status)
 }
 
 pub fn get_all_markets(client: &EllipsisClient) -> anyhow::Result<Vec<(Pubkey, Account)>> {
@@ -111,44 +71,9 @@ pub async fn get_book_levels(
     let header = MarketHeader::try_from_slice(header_bytes)?;
 
     // Derserialize data and load into correct type
-    let market = load_with_dispatch_mut(&header.market_size_params, market_bytes)
+    let market = load_with_dispatch(&header.market_size_params, market_bytes)
         .unwrap()
         .inner;
 
     Ok(market.get_ladder(levels))
 }
-
-pub async fn get_full_orderbook(
-    market_pubkey: &Pubkey,
-    client: &EllipsisClient,
-) -> anyhow::Result<Ladder> {
-    // Get market account
-    let mut market_account_data = client.get_account_data(&market_pubkey).await?;
-    let (header_bytes, market_bytes) = market_account_data.split_at_mut(size_of::<MarketHeader>());
-    let header = MarketHeader::try_from_slice(header_bytes)?;
-
-    // Derserialize data and load into correct type
-    let market = load_with_dispatch_mut(&header.market_size_params, market_bytes)
-        .unwrap()
-        .inner;
-
-    let book_bids  = market.get_book(Side::Bid);
-    let book_asks = market.get_book(Side::Ask);
-    let mut bids = vec![];
-    let mut asks = vec![]; 
-    for (order_id, order) in book_bids.iter(){ 
-        bids.push(LadderOrder{
-            price_in_ticks: order_id.price_in_ticks,
-            size_in_base_lots: order.num_base_lots,
-        });
-    }
-    for (order_id, order) in book_asks.iter(){ 
-        asks.push(LadderOrder{
-            price_in_ticks: order_id.price_in_ticks,
-            size_in_base_lots: order.num_base_lots,
-        });
-    }
-    Ok(Ladder { bids: bids, asks: asks })
-}
-
-

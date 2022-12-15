@@ -1,9 +1,13 @@
 mod command;
-mod processor;
 mod helpers;
+mod processor;
 use crate::command::Command;
-use crate::processor::*;
-
+use crate::processor::{
+    process_get_all_markets::*, process_get_book_levels::*, process_get_full_book::*,
+    process_get_market::*, process_get_market_status::*, process_get_open_orders::*,
+    process_get_seat_info::*, process_get_top_of_book::*, process_get_traders_for_market::*,
+    process_get_transaction::*, process_mint_tokens::*, process_mint_tokens_for_market::*,
+};
 use anyhow::anyhow;
 use clap::Parser;
 use ellipsis_client::EllipsisClient;
@@ -34,7 +38,7 @@ pub fn get_network(network_str: &str) -> &str {
 }
 
 pub fn is_devnet(network_str: &str) -> bool {
-    matches!(network_str, "devnet" | "dev")
+    network_str.contains( "dev")
 }
 
 pub fn get_payer_keypair() -> Keypair {
@@ -80,7 +84,7 @@ async fn main() -> anyhow::Result<()> {
             levels,
         } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
-            process_get_book(&market_pubkey, &sdk, levels).await
+            process_get_book_levels(&market_pubkey, &sdk, levels).await
         }
         Command::GetFullBook { market_pubkey } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
@@ -133,13 +137,7 @@ async fn main() -> anyhow::Result<()> {
                 return Ok(());
             }
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
-            process_mint_tokens_for_market(
-                &sdk,
-                &recipient_pubkey,
-                base_amount,
-                quote_amount,
-            )
-            .await
+            process_mint_tokens_for_market(&sdk, &recipient_pubkey, base_amount, quote_amount).await
         }
     }
 }

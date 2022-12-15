@@ -1,15 +1,32 @@
 use phoenix_sdk::sdk_client::*;
 use phoenix_types::enums::Side;
-use phoenix::program::get_vault_address;
-use phoenix_types::market::{MarketHeader, TraderState};
+use phoenix_types::instructions::get_vault_address;
+use phoenix_types::market::{MarketHeader, TraderState, Ladder};
 use solana_sdk::program_pack::Pack;
 use solana_sdk::pubkey::Pubkey;
 
+pub fn print_book(sdk: &SDKClient, book: &Ladder) { 
+    let bids = book.bids.iter().map(|b| {
+        format!(
+            "Price: {}, Size: {}",
+            sdk.core.ticks_to_float_price(b.price_in_ticks),
+            sdk.base_lots_to_base_units_multiplier() * b.size_in_base_lots as f64
+        )
+    }).collect::<Vec<String>>();
+    println!("Bids: {:?}", bids);
 
-pub fn print_market_summary_data(
-    market_pubkey: &Pubkey,
-    header: &MarketHeader,
-) {
+    let asks = book.asks.iter().map(|a| {
+        format!(
+            "Price: {}, Size: {}",
+            sdk.core.ticks_to_float_price(a.price_in_ticks),
+            sdk.base_lots_to_base_units_multiplier() * a.size_in_base_lots as f64
+        )
+    }).collect::<Vec<String>>();
+    println!("Asks: {:?}", asks);
+
+
+}
+pub fn print_market_summary_data(market_pubkey: &Pubkey, header: &MarketHeader) {
     let base_pubkey = header.base_params.mint_key;
     let quote_pubkey = header.quote_params.mint_key;
 
@@ -24,7 +41,7 @@ pub async fn print_market_details(
     sdk: &SDKClient,
     market_pubkey: &Pubkey,
     market_metadata: &MarketMetadata,
-    taker_fees: u16
+    taker_fees: u16,
 ) {
     let base_pubkey = market_metadata.base_mint;
     let quote_pubkey = market_metadata.quote_mint;
@@ -69,7 +86,7 @@ pub async fn print_market_details(
         "Tick size (quote atoms per base unit): {}",
         market_metadata.tick_size_in_quote_atoms_per_base_unit
     );
-    println!("Taker fees in bips: {}", taker_fees); 
+    println!("Taker fees in bips: {}", taker_fees);
 }
 
 pub fn print_trader_state(sdk: &SDKClient, pubkey: &Pubkey, state: &TraderState) {
@@ -83,35 +100,34 @@ pub fn print_trader_state(sdk: &SDKClient, pubkey: &Pubkey, state: &TraderState)
     println!("--------------------------------");
     println!("Trader pubkey: {:?}", pubkey);
     println!(
-        "Base lots locked: {}",
+        "Base token locked: {}",
         get_decimal_string(
             sdk.base_lots_to_base_amount(state.base_lots_locked),
             sdk.base_decimals
         )
     );
     println!(
-        "Base lots free: {}",
+        "Base token free: {}",
         get_decimal_string(
             sdk.base_lots_to_base_amount(state.base_lots_free),
             sdk.base_decimals
         )
     );
     println!(
-        "Quote lots locked: {}",
+        "Quote token locked: {}",
         get_decimal_string(
             sdk.quote_lots_to_quote_amount(state.quote_lots_locked),
             sdk.quote_decimals
         )
     );
     println!(
-        "Quote lots free: {}",
+        "Quote token free: {}",
         get_decimal_string(
             sdk.quote_lots_to_quote_amount(state.quote_lots_free),
             sdk.quote_decimals
         )
     );
 }
-
 
 pub fn log_market_events(sdk: &SDKClient, market_events: Vec<PhoenixEvent>) {
     for event in market_events {
@@ -128,7 +144,7 @@ pub fn log_market_events(sdk: &SDKClient, market_events: Vec<PhoenixEvent>) {
                     side_filled,
                     ..
                 } = fill;
-                let keys = vec![];
+                let keys = initialize_log(&event, "Fill".to_string());
                 let fill_data = vec![
                     maker.to_string(),
                     taker.to_string(),
@@ -192,6 +208,13 @@ pub fn log_market_events(sdk: &SDKClient, market_events: Vec<PhoenixEvent>) {
                     ),
                 ];
                 println!("{}", finalize_log(keys, reduce_data));
+            }
+            MarketEventDetails::FillSummary(fill_summary) => {
+                let FillSummary {
+                    total_quote_fees,
+                    ..
+                } = fill_summary;
+                println!("Total quote token fees paid: {}", sdk.quote_amount_to_quote_unit_as_float(total_quote_fees));
             }
             _ => {
                 continue;
