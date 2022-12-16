@@ -38,10 +38,6 @@ pub fn get_network(network_str: &str) -> &str {
     }
 }
 
-pub fn is_devnet(network_str: &str) -> bool {
-    network_str.contains( "dev")
-}
-
 pub fn get_payer_keypair() -> Keypair {
     match env::var("PAYER").is_ok() {
         true => Keypair::from_base58_string(&env::var("PAYER").expect("$PAYER is not set")[..]),
@@ -125,10 +121,6 @@ async fn main() -> anyhow::Result<()> {
             recipient_pubkey,
             amount,
         } => {
-            if !is_devnet(&network_url) {
-                println!("Command only valid for devnet");
-                return Ok(());
-            }
             process_mint_tokens(&client, &payer, &recipient_pubkey, mint_ticker, amount).await
         }
         Command::MintTokensForMarket {
@@ -137,10 +129,6 @@ async fn main() -> anyhow::Result<()> {
             base_amount,
             quote_amount,
         } => {
-            if !is_devnet(&network_url) {
-                println!("Command only valid for devnet");
-                return Ok(());
-            }
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_mint_tokens_for_market(&sdk, &recipient_pubkey, base_amount, quote_amount).await
         }
