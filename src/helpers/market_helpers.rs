@@ -25,7 +25,7 @@ pub async fn get_seat_status(
     seat_key: &Pubkey,
 ) -> anyhow::Result<phoenix_types::market::SeatApprovalStatus> {
     // Get seat account and deserialize
-    let seat_acc = sdk.client.get_account(&seat_key).await?;
+    let seat_acc = sdk.client.get_account(seat_key).await?;
     let mut seat_acc_data = seat_acc.data.to_vec();
     let (_, seat_approval_bytes) = seat_acc_data.split_at_mut(72);
     let status_as_u64  = u64::try_from_slice(&seat_approval_bytes[0..8])?;
@@ -66,7 +66,7 @@ pub async fn get_book_levels(
     levels: u64,
 ) -> anyhow::Result<Ladder> {
     // Get market account
-    let mut market_account_data = client.get_account_data(&market_pubkey).await?;
+    let mut market_account_data = client.get_account_data(market_pubkey).await?;
     let (header_bytes, market_bytes) = market_account_data.split_at_mut(size_of::<MarketHeader>());
     let header = MarketHeader::try_from_slice(header_bytes)?;
 

@@ -7,11 +7,11 @@ pub async fn process_get_full_book(
     market_pubkey: &Pubkey,
     sdk: &SDKClient,
 ) -> anyhow::Result<()> {
-    let book = get_book_levels(&market_pubkey, &sdk.client, u64::MAX).await?;
+    let book = get_book_levels(market_pubkey, &sdk.client, u64::MAX).await?;
     if book.bids.is_empty() && book.asks.is_empty() {
         println!("Book is empty");
     } else {
-        print_book(&sdk, &book);
+        print_book(sdk, &book);
     } 
     Ok(())
 }

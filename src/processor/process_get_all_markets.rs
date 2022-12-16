@@ -6,7 +6,7 @@ use phoenix_types::market::MarketHeader;
 use std::mem::size_of;
 
 pub fn process_get_all_markets(client: &EllipsisClient) -> anyhow::Result<()> {
-    let accounts = get_all_markets(&client)?;
+    let accounts = get_all_markets(client)?;
 
     println!("Found {} market(s)", accounts.len());
 
