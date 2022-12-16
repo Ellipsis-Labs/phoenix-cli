@@ -28,29 +28,44 @@ pub async fn process_get_open_orders(
     let book_bids = market.get_book(Side::Bid);
     let book_asks = market.get_book(Side::Ask);
 
+    println!("Open Bids");
     let mut open_bids = vec![];
+    open_bids.push(format!(
+        "{0: <20} | {1: <20} | {2: <10} | {3: <10}",
+        "ID", "Price (ticks)", "Price", "Quantity"
+    ));
     for (order_id, order) in book_bids.iter() {
         if order.trader_index as u32 == trader_index {
             open_bids.push(format!(
-                "Price: {}, Size: {:.3}",
-                sdk.core.ticks_to_float_price(order_id.price_in_ticks),
-                sdk.base_lots_to_base_units_multiplier() * order.num_base_lots as f64
+                "{0: <20} | {1: <20} | {2: <10} | {3: <10}",
+                order_id.order_sequence_number,
+                order_id.price_in_ticks,
+                sdk.ticks_to_float_price(order_id.price_in_ticks),
+                order.num_base_lots as f64 * sdk.base_lots_to_base_units_multiplier()
             ));
         }
     }
-    println!("Open Bids: {:?}", open_bids);
+    open_bids.iter().for_each(|line| println!("{}", line));
 
+    println!();
+    println!("Open Asks");
     let mut open_asks = vec![];
+    open_asks.push(format!(
+        "{0: <20} | {1: <20} | {2: <10} | {3: <10}",
+        "ID", "Price (ticks)", "Price", "Quantity",
+    ));
     for (order_id, order) in book_asks.iter() {
         if order.trader_index as u32 == trader_index {
             open_asks.push(format!(
-                "Price: {}, Size: {:.3}",
-                sdk.core.ticks_to_float_price(order_id.price_in_ticks),
-                sdk.base_lots_to_base_units_multiplier() * order.num_base_lots as f64
+                "{0: <20} | {1: <20} | {2: <10} | {3: <10}",
+                order_id.order_sequence_number,
+                order_id.price_in_ticks,
+                sdk.ticks_to_float_price(order_id.price_in_ticks),
+                order.num_base_lots as f64 * sdk.base_lots_to_base_units_multiplier()
             ));
         }
     }
-    println!("Open Asks: {:?}", open_asks);
+    open_asks.iter().for_each(|line| println!("{}", line));
 
     Ok(())
 }

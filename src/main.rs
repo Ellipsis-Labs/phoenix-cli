@@ -13,7 +13,7 @@ use anyhow::anyhow;
 use clap::Parser;
 use ellipsis_client::EllipsisClient;
 use phoenix_sdk::sdk_client::*;
-use solana_cli_config::{Config, ConfigInput};
+use solana_cli_config::{Config, ConfigInput, CONFIG_FILE};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::signer::keypair::{read_keypair_file, Keypair};
 use solana_sdk::signer::Signer;
@@ -49,7 +49,14 @@ pub fn get_payer_keypair_from_path(path: &str) -> Keypair {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli = Args::parse();
-    let config = Config::default();
+    let config = match CONFIG_FILE.as_ref() {
+        Some(config_file) => Config::load(config_file).unwrap_or_else(|_| {
+            println!("Failed to load config file: {}", config_file);
+            Config::default()
+        }),
+        None => Config::default(),
+    };
+    // let config = Config::load(&CONFIG_FILE.as_ref().unwrap()).expect("Failed to load config file");
     let commitment =
         ConfigInput::compute_commitment_config("", &cli.commitment.unwrap_or(config.commitment)).1;
     let payer = get_payer_keypair_from_path(&cli.keypair_path.unwrap_or(config.keypair_path));
