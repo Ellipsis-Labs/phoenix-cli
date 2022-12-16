@@ -30,24 +30,30 @@ pub async fn process_get_open_orders(
     let mut open_bids = vec![];
     for (order_id, order) in book_bids.iter() {
         if order.trader_index as u32 == trader_index {
-            open_bids.push((
-                sdk.ticks_to_float_price(order_id.price_in_ticks),
-                order.num_base_lots as f64 * sdk.base_lots_to_base_units_multiplier(),
-            ));
+            open_bids.push(
+                format!(
+                    "Price: {}, Size: {:.3}",
+                    sdk.core.ticks_to_float_price(order_id.price_in_ticks),
+                    sdk.base_lots_to_base_units_multiplier() * order.num_base_lots as f64
+                )
+            );
         }
     }
-    println!("Open bids: {:?}", open_bids);
+    println!("Open Bids: {:?}", open_bids);
 
     let mut open_asks = vec![];
     for (order_id, order) in book_asks.iter() {
         if order.trader_index as u32 == trader_index {
-            open_asks.push((
-                sdk.ticks_to_float_price(order_id.price_in_ticks),
-                order.num_base_lots as f64 * sdk.base_lots_to_base_units_multiplier(),
-            ));
+            open_asks.push(
+                format!(
+                    "Price: {}, Size: {:.3}",
+                    sdk.core.ticks_to_float_price(order_id.price_in_ticks),
+                    sdk.base_lots_to_base_units_multiplier() * order.num_base_lots as f64
+                )
+            );
         }
     }
-    println!("Open asks: {:?}", open_asks);
+    println!("Open Asks: {:?}", open_asks);
 
     Ok(())
 }

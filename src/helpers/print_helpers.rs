@@ -8,7 +8,7 @@ use solana_sdk::pubkey::Pubkey;
 pub fn print_book(sdk: &SDKClient, book: &Ladder) { 
     let bids = book.bids.iter().map(|b| {
         format!(
-            "Price: {}, Size: {}",
+            "Price: {}, Size: {:.3}",
             sdk.core.ticks_to_float_price(b.price_in_ticks),
             sdk.base_lots_to_base_units_multiplier() * b.size_in_base_lots as f64
         )
@@ -17,7 +17,7 @@ pub fn print_book(sdk: &SDKClient, book: &Ladder) {
 
     let asks = book.asks.iter().map(|a| {
         format!(
-            "Price: {}, Size: {}",
+            "Price: {}, Size: {:.3}",
             sdk.core.ticks_to_float_price(a.price_in_ticks),
             sdk.base_lots_to_base_units_multiplier() * a.size_in_base_lots as f64
         )
@@ -59,13 +59,13 @@ pub async fn print_market_details(
     .unwrap();
 
     println!(
-        "Base Vault balance: {}",
-        get_decimal_string(base_vault_acct.amount, sdk.base_decimals)
+        "Base Vault balance: {:.3}",
+        get_decimal_string(base_vault_acct.amount, sdk.base_decimals).parse::<f64>().unwrap()
     );
 
     println!(
-        "Quote Vault balance: {}",
-        get_decimal_string(quote_vault_acct.amount, sdk.quote_decimals)
+        "Quote Vault balance: {:.3}",
+        get_decimal_string(quote_vault_acct.amount, sdk.quote_decimals).parse::<f64>().unwrap()
     );
 
     println!("Base Token: {}", base_pubkey);

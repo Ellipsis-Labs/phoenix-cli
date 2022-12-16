@@ -61,16 +61,15 @@ pub enum Command {
         #[clap(short, long, required = true)]
         trader_pubkey: Pubkey,
     },
-    /// Request a seat for a given market and trader. Note that the seat will have to then be approved by the market authority.
+    /// Request a seat for the current payer for a given market. Note that the seat will have to then be approved by the market authority.
     RequestSeat { 
         #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
-        #[clap(short, long, required = true)]
-        trader_pubkey: Pubkey,
     },
-    /// Mint tokens to a recipient for a given ticker string. Default amount is 100_000_000_000.
+    /// Mint tokens to a recipient for a given ticker string (for example SOL or USDC). Default amount is 100_000_000_000.
     /// Devnet only
     MintTokens {
+        /// Ticker string, example: SOL
         #[clap(short, long, required = true)]
         mint_ticker: String,
         #[clap(short, long, required = true)]

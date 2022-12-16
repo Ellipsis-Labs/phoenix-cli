@@ -116,9 +116,9 @@ async fn main() -> anyhow::Result<()> {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_open_orders(&market_pubkey, &trader_pubkey, &sdk).await
         }
-        Command::RequestSeat { market_pubkey, trader_pubkey } =>  { 
+        Command::RequestSeat { market_pubkey } =>  { 
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
-            process_request_seat(&market_pubkey, &trader_pubkey, &sdk).await
+            process_request_seat(&market_pubkey, &sdk).await
         }
         Command::MintTokens {
             mint_ticker,
