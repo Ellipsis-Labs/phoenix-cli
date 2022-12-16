@@ -11,7 +11,7 @@ pub async fn process_get_traders_for_market(
     sdk: &SDKClient,
 ) -> anyhow::Result<()> {
     // Get market account
-    let mut market_account_data = sdk.client.get_account_data(&market_pubkey).await?;
+    let mut market_account_data = sdk.client.get_account_data(market_pubkey).await?;
     let (header_bytes, market_bytes) = market_account_data.split_at_mut(size_of::<MarketHeader>());
     let header = MarketHeader::try_from_slice(header_bytes)?;
 
@@ -25,7 +25,7 @@ pub async fn process_get_traders_for_market(
         .get_registered_traders()
         .iter()
         .for_each(|(pubkey, state)| {
-            print_trader_state(&sdk, pubkey, state);
+            print_trader_state(sdk, pubkey, state);
         });
 
     Ok(())

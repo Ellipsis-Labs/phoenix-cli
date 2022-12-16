@@ -1,7 +1,7 @@
 mod command;
 mod helpers;
 mod processor;
-use crate::command::Command;
+use crate::command::PhoenixCLICommand;
 use crate::processor::{
     process_get_all_markets::*, process_get_book_levels::*, process_get_full_book::*,
     process_get_market::*, process_get_market_status::*, process_get_open_orders::*,
@@ -13,117 +13,122 @@ use anyhow::anyhow;
 use clap::Parser;
 use ellipsis_client::EllipsisClient;
 use phoenix_sdk::sdk_client::*;
+use solana_cli_config::{Config, ConfigInput};
 use solana_client::rpc_client::RpcClient;
-use solana_sdk::commitment_config::CommitmentConfig;
-use solana_sdk::signer::{
-    keypair::{read_keypair_file, Keypair},
-    Signer,
-};
-use std::env;
+use solana_sdk::signer::keypair::{read_keypair_file, Keypair};
+use solana_sdk::signer::Signer;
 
 #[derive(Parser)]
 #[command(author, version, about)]
 struct Args {
-    #[clap(short, long, default_value = "dev")]
-    network: String,
     #[clap(subcommand)]
-    command: Command,
+    command: PhoenixCLICommand,
+    #[clap(global = true, short, long)]
+    url: Option<String>,
+    #[clap(global = true, short, long)]
+    keypair_path: Option<String>,
+    #[clap(global = true, short, long)]
+    commitment: Option<String>,
 }
 
 pub fn get_network(network_str: &str) -> &str {
     match network_str {
-        "devnet" | "dev" => "https://api.devnet.solana.com",
-        "mainnet" | "main" | "mainnet-beta" => "https://api.mainnet-beta.solana.com",
+        "devnet" | "dev" | "d" => "https://api.devnet.solana.com",
+        "mainnet" | "main" | "m" | "mainnet-beta" => "https://api.mainnet-beta.solana.com",
+        "localnet" | "localhost" | "l" | "local" => "http://localhost:8899",
         _ => network_str,
     }
 }
 
-pub fn get_payer_keypair() -> Keypair {
-    match env::var("PAYER").is_ok() {
-        true => Keypair::from_base58_string(&env::var("PAYER").expect("$PAYER is not set")[..]),
-        false => read_keypair_file(&*shellexpand::tilde("~/.config/solana/id.json"))
-            .map_err(|e| anyhow!(e.to_string()))
-            .unwrap(),
-    }
+pub fn get_payer_keypair_from_path(path: &str) -> Keypair {
+    read_keypair_file(&*shellexpand::tilde(path))
+        .map_err(|e| anyhow!(e.to_string()))
+        .unwrap()
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli = Args::parse();
-    let network_url = get_network(&cli.network);
-
-    let payer = get_payer_keypair();
-
-    println!("Current payer: {}", payer.pubkey());
-    println!("Current network: {}", network_url);
-
+    let config = Config::default();
+    let commitment =
+        ConfigInput::compute_commitment_config("", &cli.commitment.unwrap_or(config.commitment)).1;
+    let payer = get_payer_keypair_from_path(&cli.keypair_path.unwrap_or(config.keypair_path));
+    let network_url = &get_network(&cli.url.unwrap_or(config.json_rpc_url)).to_string();
     let client = EllipsisClient::from_rpc(
-        RpcClient::new_with_commitment(network_url, CommitmentConfig::confirmed()),
+        RpcClient::new_with_commitment(network_url, commitment),
         &payer,
     )?;
 
     match cli.command {
-        Command::GetMarket { market_pubkey } => {
+        PhoenixCLICommand::GetMarket { market_pubkey } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_market(&market_pubkey, &sdk).await
         }
-        Command::GetAllMarkets => process_get_all_markets(&client),
-        Command::GetTradersForMarket { market_pubkey } => {
+        PhoenixCLICommand::GetAllMarkets => process_get_all_markets(&client),
+        PhoenixCLICommand::GetTradersForMarket { market_pubkey } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_traders_for_market(&market_pubkey, &sdk).await
         }
-        Command::GetTopOfBook { market_pubkey } => {
+        PhoenixCLICommand::GetTopOfBook { market_pubkey } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_top_of_book(&market_pubkey, &sdk).await
         }
-        Command::GetBookLevels {
+        PhoenixCLICommand::GetBookLevels {
             market_pubkey,
             levels,
         } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_book_levels(&market_pubkey, &sdk, levels).await
         }
-        Command::GetFullBook { market_pubkey } => {
+        PhoenixCLICommand::GetFullBook { market_pubkey } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_full_book(&market_pubkey, &sdk).await
         }
-        Command::GetTransaction {
+        PhoenixCLICommand::GetTransaction {
             market_pubkey,
             signature,
         } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_transaction(&signature, &sdk).await
         }
-        Command::GetMarketStatus { market_pubkey } => {
+        PhoenixCLICommand::GetMarketStatus { market_pubkey } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_market_status(&market_pubkey, &sdk).await
         }
-        Command::GetSeatInfo {
+        PhoenixCLICommand::GetSeatInfo {
             market_pubkey,
             trader_pubkey,
         } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
-            process_get_seat_info(&market_pubkey, &trader_pubkey, &sdk).await
+            process_get_seat_info(
+                &market_pubkey,
+                &trader_pubkey.unwrap_or_else(|| payer.pubkey()),
+                &sdk,
+            )
+            .await
         }
-        Command::GetOpenOrders {
+        PhoenixCLICommand::GetOpenOrders {
             market_pubkey,
             trader_pubkey,
         } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
-            process_get_open_orders(&market_pubkey, &trader_pubkey, &sdk).await
+            process_get_open_orders(
+                &market_pubkey,
+                &trader_pubkey.unwrap_or_else(|| payer.pubkey()),
+                &sdk,
+            )
+            .await
         }
-        Command::RequestSeat { market_pubkey } =>  { 
+        PhoenixCLICommand::RequestSeat { market_pubkey } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_request_seat(&market_pubkey, &sdk).await
         }
-        Command::MintTokens {
+        PhoenixCLICommand::MintTokens {
             mint_ticker,
             recipient_pubkey,
             amount,
-        } => {
-            process_mint_tokens(&client, &payer, &recipient_pubkey, mint_ticker, amount).await
-        }
-        Command::MintTokensForMarket {
+        } => process_mint_tokens(&client, &payer, &recipient_pubkey, mint_ticker, amount).await,
+        PhoenixCLICommand::MintTokensForMarket {
             market_pubkey,
             recipient_pubkey,
             base_amount,

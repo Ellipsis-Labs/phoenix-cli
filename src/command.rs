@@ -4,7 +4,7 @@ use solana_sdk::signature::Signature;
 
 // #[clap(author, version, about)]
 #[derive(Debug, Clone, Parser)]
-pub enum Command {
+pub enum PhoenixCLICommand {
     /// Get summary information on all markets
     GetAllMarkets,
     /// Get detailed information on a specific market
@@ -51,18 +51,18 @@ pub enum Command {
     GetSeatInfo {
         #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
-        #[clap(short, long, required = true)]
-        trader_pubkey: Pubkey,
+        #[clap(short, long, required = false)]
+        trader_pubkey: Option<Pubkey>,
     },
     /// Get all open orders on a given market for a trader
     GetOpenOrders {
         #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
-        #[clap(short, long, required = true)]
-        trader_pubkey: Pubkey,
+        #[clap(short, long, required = false)]
+        trader_pubkey: Option<Pubkey>,
     },
     /// Request a seat for the current payer for a given market. Note that the seat will have to then be approved by the market authority.
-    RequestSeat { 
+    RequestSeat {
         #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
     },

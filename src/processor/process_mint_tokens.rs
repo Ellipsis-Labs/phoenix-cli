@@ -23,7 +23,7 @@ pub async fn process_mint_tokens(
 
     // Get or create the ATA for the recipient. If doesn't exist, create token account
     let recipient_ata =
-        spl_associated_token_account::get_associated_token_address(&recipient_pubkey, &mint_pda);
+        spl_associated_token_account::get_associated_token_address(recipient_pubkey, &mint_pda);
 
     if client.get_account(&recipient_ata).await.is_err() {
         println!("Creating ATA");
@@ -41,12 +41,12 @@ pub async fn process_mint_tokens(
     instructions.push(devnet_token_faucet::airdrop_spl_with_ticker_ix(
         &devnet_token_faucet::id(),
         mint_ticker,
-        &recipient_pubkey,
+        recipient_pubkey,
         amount,
     ));
 
     client
-        .sign_send_instructions(instructions, vec![&payer])
+        .sign_send_instructions(instructions, vec![payer])
         .await?;
 
     println!(

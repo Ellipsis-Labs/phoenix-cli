@@ -9,7 +9,7 @@ use std::mem::size_of;
 pub async fn process_get_market(market_pubkey: &Pubkey, sdk: &SDKClient) -> anyhow::Result<()> {
     let market_metadata = sdk.get_active_market_metadata();
 
-    let mut market_account_data = sdk.client.get_account_data(&market_pubkey).await?;
+    let mut market_account_data = sdk.client.get_account_data(market_pubkey).await?;
     let (header_bytes, market_bytes) = market_account_data.split_at_mut(size_of::<MarketHeader>());
     let header = MarketHeader::try_from_slice(header_bytes)?;
 
@@ -20,6 +20,6 @@ pub async fn process_get_market(market_pubkey: &Pubkey, sdk: &SDKClient) -> anyh
 
     let taker_fees = market.get_taker_bps();
 
-    print_market_details(&sdk, &market_pubkey, market_metadata, taker_fees).await;
+    print_market_details(sdk, market_pubkey, market_metadata, taker_fees).await;
     Ok(())
 }

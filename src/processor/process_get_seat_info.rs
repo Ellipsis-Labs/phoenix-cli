@@ -14,7 +14,7 @@ pub async fn process_get_seat_info(
         &phoenix::ID,
     );
     println!("Seat address: {}", seat_address);
-    let status = get_seat_status(&sdk, &seat_address).await;
+    let status = get_seat_status(sdk, &seat_address).await;
     match status {
         Ok(status) => println!("Seat status: {}", status),
         _ => println!("Seat status not found"),
