@@ -99,10 +99,13 @@ pub async fn print_market_details(
         )
     );
     println!(
-        "Tick size (quote atoms per base unit): {}",
-        market_metadata.tick_size_in_quote_atoms_per_base_unit
+        "Tick size: {}",
+        get_decimal_string(
+            market_metadata.tick_size_in_quote_atoms_per_base_unit,
+            market_metadata.quote_decimals
+        )
     );
-    println!("Taker fees in bips: {}", taker_fees);
+    println!("Taker fees in basis points: {}", taker_fees);
 }
 
 pub fn print_trader_state(sdk: &SDKClient, pubkey: &Pubkey, state: &TraderState) {
