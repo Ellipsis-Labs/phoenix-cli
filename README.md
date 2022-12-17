@@ -6,7 +6,7 @@ TODO: include how to run the binary, how to see all commands in terminal (phoeni
 
 # Commands
 TODO: improve docs, include succint info about input parameters and return values 
-get-all-markets
+### get-all-markets
 Returns summary information on all markets that exist on Phoenix. Summary information includes market key, base and quote token keys, and authority key. 
 
 ### get-market
