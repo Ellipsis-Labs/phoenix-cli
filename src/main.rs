@@ -40,10 +40,8 @@ pub fn get_network(network_str: &str) -> &str {
     }
 }
 
-pub fn get_payer_keypair_from_path(path: &str) -> Keypair {
-    read_keypair_file(&*shellexpand::tilde(path))
-        .map_err(|e| anyhow!(e.to_string()))
-        .unwrap()
+pub fn get_payer_keypair_from_path(path: &str) -> anyhow::Result<Keypair> {
+    read_keypair_file(&*shellexpand::tilde(path)).map_err(|e| anyhow!(e.to_string()))
 }
 
 #[tokio::main]
@@ -56,10 +54,9 @@ async fn main() -> anyhow::Result<()> {
         }),
         None => Config::default(),
     };
-    // let config = Config::load(&CONFIG_FILE.as_ref().unwrap()).expect("Failed to load config file");
     let commitment =
         ConfigInput::compute_commitment_config("", &cli.commitment.unwrap_or(config.commitment)).1;
-    let payer = get_payer_keypair_from_path(&cli.keypair_path.unwrap_or(config.keypair_path));
+    let payer = get_payer_keypair_from_path(&cli.keypair_path.unwrap_or(config.keypair_path))?;
     let network_url = &get_network(&cli.url.unwrap_or(config.json_rpc_url)).to_string();
     let client = EllipsisClient::from_rpc(
         RpcClient::new_with_commitment(network_url, commitment),

@@ -1,7 +1,7 @@
 use crate::helpers::print_helpers::*;
 use borsh::BorshDeserialize;
 use phoenix_sdk::sdk_client::*;
-use phoenix_types::dispatch::load_with_dispatch_mut;
+use phoenix_types::dispatch::load_with_dispatch;
 use phoenix_types::market::MarketHeader;
 use solana_sdk::pubkey::Pubkey;
 use std::mem::size_of;
@@ -16,8 +16,8 @@ pub async fn process_get_traders_for_market(
     let header = MarketHeader::try_from_slice(header_bytes)?;
 
     // Derserialize data and load into correct type
-    let market = load_with_dispatch_mut(&header.market_size_params, market_bytes)
-        .unwrap()
+    let market = load_with_dispatch(&header.market_size_params, market_bytes)
+        .ok_or_else(|| anyhow::anyhow!("Failed to load market"))?
         .inner;
 
     // Print trader information
@@ -30,5 +30,3 @@ pub async fn process_get_traders_for_market(
 
     Ok(())
 }
-
-

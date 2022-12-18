@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use colored::Colorize;
 use phoenix_sdk::sdk_client::*;
 use phoenix_types::enums::Side;
@@ -20,21 +22,74 @@ pub fn print_book(sdk: &SDKClient, book: &Ladder) {
             lvl.size_in_base_lots as f64 * sdk.base_lots_to_base_units_multiplier(),
         )
     });
+    let price_precision: usize =
+        get_precision(10_u64.pow(sdk.quote_decimals) / sdk.tick_size_in_quote_atoms_per_base_unit);
+    let size_precision: usize = get_precision(sdk.num_base_lots_per_base_unit);
+    let bid_strings = bids
+        .into_iter()
+        .map(|(price, size)| {
+            let p = format!("{:.1$}", price, price_precision);
+            let s = format!("{:.1$}", size, size_precision).green();
+            (s, p)
+        })
+        .collect::<Vec<_>>();
 
-    let width: usize = 10;
-    let precision: usize = 4;
+    let bid_width = bid_strings.iter().map(|(s, _)| s.len()).max().unwrap_or(0) + 1;
 
-    for (ask_price, ask_size) in asks.into_iter().rev() {
-        let p = format!("{:.1$}", ask_price, precision);
-        let s = format!("{:.1$}", ask_size, precision).red();
-        let str = format!("{:width$} {:^width$} {:<width$}", "", p, s);
+    let ask_strings = asks
+        .into_iter()
+        .rev()
+        .map(|(price, size)| {
+            let p = format!("{:.1$}", price, price_precision);
+            let s = format!("{:.1$}", size, size_precision).red();
+            (p, s)
+        })
+        .collect::<Vec<_>>();
+
+    let price_width = bid_strings
+        .iter()
+        .zip(ask_strings.iter())
+        .map(|(a, b)| a.0.len().max(b.1.len()))
+        .max()
+        .unwrap_or(0);
+
+    let ask_width = ask_strings.iter().map(|(_, s)| s.len()).max().unwrap_or(0) + 1;
+
+    for (price, size) in ask_strings {
+        let str = format!(
+            "{:bid_width$} {:>price_width$} {:>ask_width$}",
+            "", price, size
+        );
         println!("{}", str);
     }
-    for (bid_price, bid_size) in bids {
-        let p = format!("{:.1$}", bid_price, precision);
-        let s = format!("{:.1$}", bid_size, precision).green();
-        let str = format!("{:>width$} {:^width$} {:width$}", s, p, "");
+    for (size, price) in bid_strings {
+        let str = format!(
+            "{:>bid_width$} {:>price_width$} {:ask_width$}",
+            size, price, ""
+        );
         println!("{}", str);
+    }
+}
+
+pub fn get_precision(mut target: u64) -> usize {
+    let mut prime_factors = BTreeMap::new();
+    let mut candidate = 2;
+    while target > 1 {
+        if target % candidate == 0 {
+            *prime_factors.entry(candidate).or_insert(0) += 1;
+            target /= candidate;
+        } else {
+            candidate += 1;
+        }
+    }
+    let precision =
+        (*prime_factors.get(&2).unwrap_or(&0)).max(*prime_factors.get(&5).unwrap_or(&0));
+    if precision == 0 {
+        // In the off chance that the target does not have 2 or 5 as a prime factor,
+        // we'll just return a precision of 3 decimals.
+        3
+    } else {
+        precision
     }
 }
 
@@ -54,7 +109,7 @@ pub async fn print_market_details(
     market_pubkey: &Pubkey,
     market_metadata: &MarketMetadata,
     taker_fees: u16,
-) {
+) -> anyhow::Result<()> {
     let base_pubkey = market_metadata.base_mint;
     let quote_pubkey = market_metadata.quote_mint;
 
@@ -62,26 +117,19 @@ pub async fn print_market_details(
     let quote_vault = get_vault_address(market_pubkey, &quote_pubkey).0;
 
     let base_vault_acct =
-        spl_token::state::Account::unpack(&sdk.client.get_account(&base_vault).await.unwrap().data)
-            .unwrap();
+        spl_token::state::Account::unpack(&sdk.client.get_account(&base_vault).await?.data)?;
 
-    let quote_vault_acct = spl_token::state::Account::unpack(
-        &sdk.client.get_account(&quote_vault).await.unwrap().data,
-    )
-    .unwrap();
+    let quote_vault_acct =
+        spl_token::state::Account::unpack(&sdk.client.get_account(&quote_vault).await?.data)?;
 
     println!(
         "Base Vault balance: {:.3}",
-        get_decimal_string(base_vault_acct.amount, sdk.base_decimals)
-            .parse::<f64>()
-            .unwrap()
+        get_decimal_string(base_vault_acct.amount, sdk.base_decimals).parse::<f64>()?
     );
 
     println!(
         "Quote Vault balance: {:.3}",
-        get_decimal_string(quote_vault_acct.amount, sdk.quote_decimals)
-            .parse::<f64>()
-            .unwrap()
+        get_decimal_string(quote_vault_acct.amount, sdk.quote_decimals).parse::<f64>()?
     );
 
     println!("Base Token: {}", base_pubkey);
@@ -106,6 +154,7 @@ pub async fn print_market_details(
         )
     );
     println!("Taker fees in basis points: {}", taker_fees);
+    Ok(())
 }
 
 pub fn print_trader_state(sdk: &SDKClient, pubkey: &Pubkey, state: &TraderState) {

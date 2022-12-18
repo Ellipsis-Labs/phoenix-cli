@@ -1,10 +1,12 @@
 use borsh::BorshDeserialize;
 use phoenix_sdk::sdk_client::*;
-use phoenix_types::dispatch::load_with_dispatch_mut;
+use phoenix_types::dispatch::load_with_dispatch;
 use phoenix_types::enums::Side;
 use phoenix_types::market::MarketHeader;
 use solana_sdk::pubkey::Pubkey;
 use std::mem::size_of;
+
+use crate::helpers::print_helpers::get_precision;
 
 pub async fn process_get_open_orders(
     market_pubkey: &Pubkey,
@@ -17,8 +19,8 @@ pub async fn process_get_open_orders(
     let header = MarketHeader::try_from_slice(header_bytes)?;
 
     // Derserialize data and load into correct type
-    let market = load_with_dispatch_mut(&header.market_size_params, market_bytes)
-        .unwrap()
+    let market = load_with_dispatch(&header.market_size_params, market_bytes)
+        .ok_or_else(|| anyhow::anyhow!("Failed to load market"))?
         .inner;
 
     let trader_index = market
@@ -27,6 +29,9 @@ pub async fn process_get_open_orders(
 
     let book_bids = market.get_book(Side::Bid);
     let book_asks = market.get_book(Side::Ask);
+    let price_precision: usize =
+        get_precision(10_u64.pow(sdk.quote_decimals) / sdk.tick_size_in_quote_atoms_per_base_unit);
+    let size_precision: usize = get_precision(sdk.num_base_lots_per_base_unit);
 
     println!("Open Bids");
     let mut open_bids = vec![];
@@ -40,8 +45,16 @@ pub async fn process_get_open_orders(
                 "{0: <20} | {1: <20} | {2: <10} | {3: <10}",
                 order_id.order_sequence_number,
                 order_id.price_in_ticks,
-                sdk.ticks_to_float_price(order_id.price_in_ticks),
-                order.num_base_lots as f64 * sdk.base_lots_to_base_units_multiplier()
+                format!(
+                    "{:.1$}",
+                    sdk.ticks_to_float_price(order_id.price_in_ticks),
+                    price_precision
+                ),
+                format!(
+                    "{:.1$}",
+                    order.num_base_lots as f64 * sdk.base_lots_to_base_units_multiplier(),
+                    size_precision
+                ),
             ));
         }
     }
@@ -60,8 +73,16 @@ pub async fn process_get_open_orders(
                 "{0: <20} | {1: <20} | {2: <10} | {3: <10}",
                 order_id.order_sequence_number,
                 order_id.price_in_ticks,
-                sdk.ticks_to_float_price(order_id.price_in_ticks),
-                order.num_base_lots as f64 * sdk.base_lots_to_base_units_multiplier()
+                format!(
+                    "{:.1$}",
+                    sdk.ticks_to_float_price(order_id.price_in_ticks),
+                    price_precision
+                ),
+                format!(
+                    "{:.1$}",
+                    order.num_base_lots as f64 * sdk.base_lots_to_base_units_multiplier(),
+                    size_precision,
+                ),
             ));
         }
     }
