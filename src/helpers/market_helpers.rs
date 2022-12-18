@@ -1,9 +1,9 @@
 use borsh::BorshDeserialize;
 use ellipsis_client::EllipsisClient;
 use phoenix_sdk::sdk_client::*;
+use phoenix_types as phoenix;
 use phoenix_types::dispatch::load_with_dispatch;
 use phoenix_types::market::Ladder;
-use phoenix_types as phoenix; 
 use phoenix_types::market::MarketHeader;
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig};
@@ -28,7 +28,7 @@ pub async fn get_seat_status(
     let seat_acc = sdk.client.get_account(seat_key).await?;
     let mut seat_acc_data = seat_acc.data.to_vec();
     let (_, seat_approval_bytes) = seat_acc_data.split_at_mut(72);
-    let status_as_u64  = u64::try_from_slice(&seat_approval_bytes[0..8])?;
+    let status_as_u64 = u64::try_from_slice(&seat_approval_bytes[0..8])?;
     let seat_status = phoenix_types::market::SeatApprovalStatus::from(status_as_u64);
     Ok(seat_status)
 }
@@ -72,7 +72,7 @@ pub async fn get_book_levels(
 
     // Derserialize data and load into correct type
     let market = load_with_dispatch(&header.market_size_params, market_bytes)
-        .unwrap()
+        .ok_or_else(|| anyhow::anyhow!("Failed to load market"))?
         .inner;
 
     Ok(market.get_ladder(levels))

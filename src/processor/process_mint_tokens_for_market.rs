@@ -17,11 +17,14 @@ pub async fn process_mint_tokens_for_market(
     let quote_mint = market_metadata.quote_mint;
 
     let base_mint_account = Mint::unpack(&sdk.client.get_account_data(&base_mint).await?)?;
-
     let quote_mint_account = Mint::unpack(&sdk.client.get_account_data(&quote_mint).await?)?;
 
-    let quote_mint_authority = quote_mint_account.mint_authority.unwrap();
-    let base_mint_authority = base_mint_account.mint_authority.unwrap();
+    let quote_mint_authority = quote_mint_account
+        .mint_authority
+        .ok_or_else(|| anyhow::anyhow!("Quote mint authority is not set. Cannot mint tokens"))?;
+    let base_mint_authority = base_mint_account
+        .mint_authority
+        .ok_or_else(|| anyhow::anyhow!("Base mint authority is not set. Cannot mint tokens"))?;
 
     if sdk.client.get_account(&quote_mint_authority).await?.owner != devnet_token_faucet::id() {
         return Err(anyhow::anyhow!(
