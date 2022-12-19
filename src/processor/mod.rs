@@ -14,3 +14,5 @@ pub mod process_request_seat;
 pub mod process_get_transaction_history;
 pub mod process_get_place_transaction_history;
 pub mod process_get_reduce_transaction_history;
+pub mod process_get_taker_fill_transaction_history;
+pub mod process_get_maker_fill_transaction_history;

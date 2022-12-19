@@ -7,12 +7,12 @@ use crate::helpers::csv_helpers::market_events_to_csv;
 pub async fn process_get_reduce_transaction_history(
     market_pubkey: &Pubkey,
     trader_pubkey: &Pubkey,
-    slot: u64,
-    into_csv: bool,
+    lookback_slots: u64,
+    save_csv: bool,
     file_path: String,
     sdk: &SDKClient,
 ) -> anyhow::Result<()> {
-    let transaction_history = get_transaction_history(market_pubkey, trader_pubkey, slot, &sdk).await?;
+    let transaction_history = get_transaction_history(market_pubkey, trader_pubkey, lookback_slots, &sdk).await?;
     let mut events = vec![];
     let mut failures = vec![];
     for sig in transaction_history {
@@ -31,7 +31,14 @@ pub async fn process_get_reduce_transaction_history(
         _ => false,
     }).collect::<Vec<PhoenixEvent>>();
 
-    if into_csv {
+    if reduce_events.is_empty() {
+        println!(
+            "No reduces found for {} in the last {} slots",
+            trader_pubkey, lookback_slots
+        );
+    }
+
+    if save_csv {
         market_events_to_csv(sdk, reduce_events, file_path)?;
     } else {
         log_market_events(sdk, reduce_events);

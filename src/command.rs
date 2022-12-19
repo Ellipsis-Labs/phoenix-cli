@@ -61,42 +61,69 @@ pub enum PhoenixCLICommand {
         #[clap(short, long, required = false)]
         trader_pubkey: Option<Pubkey>,
     },
-    /// Get all transactions initiated by the trader for a given market during a set slot period. Default and max is the last 172800 slots, or approximately 24 hours.
+    /// Get all transactions initiated by the trader for a given market during the last N slots. Default and max is the last 172800 slots, or approximately 24 hours.
+    /// Note this will not include fills as a maker. 
     GetTransactionHistory {
         #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
         #[clap(short, long, required = false)]
         trader_pubkey: Option<Pubkey>,
         #[clap(short, long, required = false, default_value = "172800")]
-        slot: u64,
+        lookback_slots: u64,
         #[clap(short, long, required = false)]
-        into_csv: bool,
+        save_csv: bool,
         #[clap(short, long, required = false)]
         file_path: Option<String>,
     },
-    /// Get all Place transanctions initiated by the trader for a given market during a set slot period. Default and max is the last 172800 slots, or approximately 24 hours.
+    /// Get all Fills initiated by the trader as a taker for a given market during the last N slots. Default and max is the last 172800 slots, or approximately 24 hours.
+    GetTakerFillTransactionHistory {
+        #[clap(short, long, required = true)]
+        market_pubkey: Pubkey,
+        #[clap(short, long, required = false)]
+        trader_pubkey: Option<Pubkey>,
+        #[clap(short, long, required = false, default_value = "172800")]
+        lookback_slots: u64,
+        #[clap(short, long, required = false)]
+        save_csv: bool,
+        #[clap(short, long, required = false)]
+        file_path: Option<String>,
+    },
+    /// Get all maker Fills for a trader for a given market during the last N slots. Default and max is the last 172800 slots, or approximately 24 hours.
+    GetMakerFillTransactionHistory {
+        #[clap(short, long, required = true)]
+        market_pubkey: Pubkey,
+        #[clap(short, long, required = false)]
+        trader_pubkey: Option<Pubkey>,
+        #[clap(short, long, required = false, default_value = "172800")]
+        lookback_slots: u64,
+        #[clap(short, long, required = false)]
+        save_csv: bool,
+        #[clap(short, long, required = false)]
+        file_path: Option<String>,
+    },
+    /// Get all Place transanctions initiated by the trader for a given market during the last N slots. Default and max is the last 172800 slots, or approximately 24 hours.
     GetPlaceTransactionHistory {
         #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
         #[clap(short, long, required = false)]
         trader_pubkey: Option<Pubkey>,
         #[clap(short, long, required = false, default_value = "172800")]
-        slot: u64,
+        lookback_slots: u64,
         #[clap(short, long, required = false)]
-        into_csv: bool,
+        save_csv: bool,
         #[clap(short, long, required = false)]
         file_path: Option<String>,
     },
-    /// Get all Reduce transanctions initiated by the trader for a given market during a set slot period. Default and max is the last 172800 slots, or approximately 24 hours.
+    /// Get all Reduce transanctions initiated by the trader for a given market during the last N slots. Default and max is the last 172800 slots, or approximately 24 hours.
     GetReduceTransactionHistory {
         #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
         #[clap(short, long, required = false)]
         trader_pubkey: Option<Pubkey>,
         #[clap(short, long, required = false, default_value = "172800")]
-        slot: u64,
+        lookback_slots: u64,
         #[clap(short, long, required = false)]
-        into_csv: bool,
+        save_csv: bool,
         #[clap(short, long, required = false)]
         file_path: Option<String>,
     },

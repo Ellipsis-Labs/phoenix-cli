@@ -86,16 +86,14 @@ pub async fn get_book_levels(
 pub async fn get_transaction_history(
     market_pubkey: &Pubkey,
     trader_pubkey: &Pubkey,
-    slots_back: u64, 
+    lookback_slots: u64, 
     sdk: &SDKClient,   
 )  -> anyhow::Result<Vec<Signature>>{
-    // goal is to return the trades over last day for a given market and trader
-    // will appoximate a day by slot time, approx 2 slots/second and 86400 seconds/day = 172800 slots/day
+
     let current_slot = sdk.client.get_slot()?;
-    let mut target_slot = current_slot - slots_back;
+    let mut target_slot = current_slot - lookback_slots;
     let trader_signatures = get_signatures(trader_pubkey, target_slot, sdk).await?;
     if trader_signatures.is_empty() {
-        println!("No trades found for this trader");
         return Ok(Vec::new());
     }
 
@@ -105,11 +103,34 @@ pub async fn get_transaction_history(
     }
     let market_signatures = get_signatures(market_pubkey, target_slot, sdk).await?; 
     if market_signatures.is_empty() {
-        println!("No trades found for this market");
+        println!("No events found for this market");
         return Ok(Vec::new());
     }
-    // create a vector of signatures that are in both the trader and market vectors
+
+    // create a vector of signatures that are the intersection of market and trader transactions
     let joint_signatures: Vec<&RpcConfirmedTransactionStatusWithSignature>  = trader_signatures.iter().filter(|x| market_signatures.contains(x)).collect();
+    let joint_signatures_filtered: Vec<Signature> = joint_signatures.iter().map(|x| Signature::from_str(&x.signature).unwrap()).collect();
+
+    Ok(joint_signatures_filtered)
+}
+
+pub async fn get_market_transaction_history_excluding_trader(
+    market_pubkey: &Pubkey,
+    trader_pubkey: &Pubkey,
+    lookback_slots: u64, 
+    sdk: &SDKClient,   
+)  -> anyhow::Result<Vec<Signature>>{
+    let current_slot = sdk.client.get_slot()?;
+    let target_slot = current_slot - lookback_slots;
+    let trader_signatures = get_signatures(trader_pubkey, target_slot, sdk).await?;
+    let market_signatures = get_signatures(market_pubkey, target_slot, sdk).await?; 
+    if market_signatures.is_empty() {
+        println!("No events found for this market");
+        return Ok(Vec::new());
+    }
+
+    // create a vector of signatures of all market events not initiated by the trader
+    let joint_signatures: Vec<&RpcConfirmedTransactionStatusWithSignature>  = market_signatures.iter().filter(|x| !trader_signatures.contains(x)).collect();
     let joint_signatures_filtered: Vec<Signature> = joint_signatures.iter().map(|x| Signature::from_str(&x.signature).unwrap()).collect();
 
     Ok(joint_signatures_filtered)
