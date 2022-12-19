@@ -5,9 +5,10 @@ use crate::command::PhoenixCLICommand;
 use crate::processor::{
     process_get_all_markets::*, process_get_book_levels::*, process_get_full_book::*,
     process_get_market::*, process_get_market_status::*, process_get_open_orders::*,
+    process_get_place_transaction_history::*, process_get_reduce_transaction_history::*,
     process_get_seat_info::*, process_get_top_of_book::*, process_get_traders_for_market::*,
-    process_get_transaction::*, process_mint_tokens::*, process_mint_tokens_for_market::*,
-    process_request_seat::*, process_get_transaction_history::*,
+    process_get_transaction::*, process_get_transaction_history::*, process_mint_tokens::*,
+    process_mint_tokens_for_market::*, process_request_seat::*,
 };
 use anyhow::anyhow;
 use clap::Parser;
@@ -123,7 +124,13 @@ async fn main() -> anyhow::Result<()> {
             )
             .await
         }
-        PhoenixCLICommand::GetTransactionHistory { market_pubkey, trader_pubkey, slot, into_csv, file_path } => {
+        PhoenixCLICommand::GetTransactionHistory {
+            market_pubkey,
+            trader_pubkey,
+            slot,
+            into_csv,
+            file_path,
+        } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_transaction_history(
                 &market_pubkey,
@@ -131,6 +138,42 @@ async fn main() -> anyhow::Result<()> {
                 slot.min(172800),
                 into_csv,
                 file_path.unwrap_or_else(|| "transaction_history.csv".to_string()),
+                &sdk,
+            )
+            .await
+        }
+        PhoenixCLICommand::GetPlaceTransactionHistory {
+            market_pubkey,
+            trader_pubkey,
+            slot,
+            into_csv,
+            file_path,
+        } => {
+            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
+            process_get_place_transaction_history(
+                &market_pubkey,
+                &trader_pubkey.unwrap_or_else(|| payer.pubkey()),
+                slot.min(172800),
+                into_csv,
+                file_path.unwrap_or_else(|| "place_transaction_history.csv".to_string()),
+                &sdk,
+            )
+            .await
+        }
+        PhoenixCLICommand::GetReduceTransactionHistory {
+            market_pubkey,
+            trader_pubkey,
+            slot,
+            into_csv,
+            file_path,
+        } => {
+            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
+            process_get_reduce_transaction_history(
+                &market_pubkey,
+                &trader_pubkey.unwrap_or_else(|| payer.pubkey()),
+                slot.min(172800),
+                into_csv,
+                file_path.unwrap_or_else(|| "reduce_transaction_history.csv".to_string()),
                 &sdk,
             )
             .await

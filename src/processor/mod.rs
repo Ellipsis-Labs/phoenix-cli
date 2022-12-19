@@ -12,4 +12,5 @@ pub mod process_mint_tokens;
 pub mod process_mint_tokens_for_market;
 pub mod process_request_seat;
 pub mod process_get_transaction_history;
-
+pub mod process_get_place_transaction_history;
+pub mod process_get_reduce_transaction_history;

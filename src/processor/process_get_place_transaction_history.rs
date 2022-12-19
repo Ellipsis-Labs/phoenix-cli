@@ -4,7 +4,7 @@ use phoenix_sdk::sdk_client::*;
 use solana_sdk::pubkey::Pubkey;
 use crate::helpers::csv_helpers::market_events_to_csv;
 
-pub async fn process_get_transaction_history(
+pub async fn process_get_place_transaction_history(
     market_pubkey: &Pubkey,
     trader_pubkey: &Pubkey,
     slot: u64,
@@ -26,10 +26,15 @@ pub async fn process_get_transaction_history(
         }
     }
 
+    let place_events = events.into_iter().filter(|x| match x.details {
+        MarketEventDetails::Place(_) => true,
+        _ => false,
+    }).collect::<Vec<PhoenixEvent>>();
+
     if into_csv {
-        market_events_to_csv(sdk, events, file_path)?;
+        market_events_to_csv(sdk, place_events, file_path)?;
     } else {
-        log_market_events(sdk, events);
+        log_market_events(sdk, place_events);
     }
     
     if !failures.is_empty() {
