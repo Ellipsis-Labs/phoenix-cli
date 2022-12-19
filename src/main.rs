@@ -123,12 +123,14 @@ async fn main() -> anyhow::Result<()> {
             )
             .await
         }
-        PhoenixCLICommand::GetTransactionHistory { market_pubkey, trader_pubkey, slot } => {
+        PhoenixCLICommand::GetTransactionHistory { market_pubkey, trader_pubkey, slot, into_csv, file_path } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_transaction_history(
                 &market_pubkey,
                 &trader_pubkey.unwrap_or_else(|| payer.pubkey()),
-                slot,
+                slot.min(172800),
+                into_csv,
+                file_path.unwrap_or_else(|| "transaction_history.csv".to_string()),
                 &sdk,
             )
             .await

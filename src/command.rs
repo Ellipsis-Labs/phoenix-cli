@@ -61,7 +61,7 @@ pub enum PhoenixCLICommand {
         #[clap(short, long, required = false)]
         trader_pubkey: Option<Pubkey>,
     },
-    /// Get all transactions initiated by the trader for a given market. Default is for the last 172800 slots, or approximately 24 hours.
+    /// Get all transactions initiated by the trader for a given market during a set slot period. Default and max is the last 172800 slots, or approximately 24 hours.
     GetTransactionHistory {
         #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
@@ -69,6 +69,10 @@ pub enum PhoenixCLICommand {
         trader_pubkey: Option<Pubkey>,
         #[clap(short, long, required = false, default_value = "172800")]
         slot: u64,
+        #[clap(short, long, required = false)]
+        into_csv: bool,
+        #[clap(short, long, required = false)]
+        file_path: Option<String>,
     },
     /// Request a seat for the current payer for a given market. Note that the seat will have to then be approved by the market authority.
     RequestSeat {
