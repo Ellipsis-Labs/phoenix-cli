@@ -34,7 +34,25 @@ pub async fn process_get_maker_fill_transaction_history(
                         _ => {}
                     }  
                 }},
-            None => failures.push(sig),
+            None => {
+                // parse (seemingly) arbitrary fails a low % of the time, so we'll retry once
+                let retry = sdk.parse_events_from_transaction(&sig).await;
+                match retry {
+                    Some(retry) => {
+                        for transaction in retry {
+                            match transaction.details {
+                                MarketEventDetails::Fill(fill) => {
+                                    if fill.maker == *trader_pubkey {
+                                        fill_events.push(transaction);
+                                    }
+                                }
+                                _ => {}
+                            }  
+                        }
+                    },
+                    None => failures.push(sig),
+                }
+            }
         }
     }
 

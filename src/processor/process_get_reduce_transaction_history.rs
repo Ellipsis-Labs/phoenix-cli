@@ -22,7 +22,14 @@ pub async fn process_get_reduce_transaction_history(
 
         match transaction_events {
             Some(transaction_events) => events.extend(transaction_events),
-            None => failures.push(sig),
+            None => {
+                // parse (seemingly) arbitrary fails a low % of the time, so we'll retry once
+                let retry = sdk.parse_events_from_transaction(&sig).await;
+                match retry {
+                    Some(retry) => events.extend(retry),
+                    None => failures.push(sig),
+                }
+            },
         }
     }
 
@@ -50,7 +57,6 @@ pub async fn process_get_reduce_transaction_history(
             println!("{}", sig);
         }
     }
-
 
     Ok(())
 }
