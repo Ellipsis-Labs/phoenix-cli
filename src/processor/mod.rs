@@ -11,4 +11,5 @@ pub mod process_get_traders_for_market;
 pub mod process_mint_tokens;
 pub mod process_mint_tokens_for_market;
 pub mod process_request_seat;
+pub mod process_get_transaction_history;
 

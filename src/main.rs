@@ -7,7 +7,7 @@ use crate::processor::{
     process_get_market::*, process_get_market_status::*, process_get_open_orders::*,
     process_get_seat_info::*, process_get_top_of_book::*, process_get_traders_for_market::*,
     process_get_transaction::*, process_mint_tokens::*, process_mint_tokens_for_market::*,
-    process_request_seat::*,
+    process_request_seat::*, process_get_transaction_history::*,
 };
 use anyhow::anyhow;
 use clap::Parser;
@@ -119,6 +119,16 @@ async fn main() -> anyhow::Result<()> {
             process_get_open_orders(
                 &market_pubkey,
                 &trader_pubkey.unwrap_or_else(|| payer.pubkey()),
+                &sdk,
+            )
+            .await
+        }
+        PhoenixCLICommand::GetTransactionHistory { market_pubkey, trader_pubkey, slot } => {
+            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
+            process_get_transaction_history(
+                &market_pubkey,
+                &trader_pubkey.unwrap_or_else(|| payer.pubkey()),
+                slot,
                 &sdk,
             )
             .await
