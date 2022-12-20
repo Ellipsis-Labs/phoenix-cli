@@ -7,17 +7,19 @@ use phoenix_types::dispatch::load_with_dispatch;
 use phoenix_types::market::Ladder;
 use phoenix_types::market::MarketHeader;
 use solana_account_decoder::UiAccountEncoding;
+use solana_client::rpc_client::GetConfirmedSignaturesForAddress2Config;
 use solana_client::rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig};
 use solana_client::rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType};
+use solana_client::rpc_response::RpcConfirmedTransactionStatusWithSignature;
 use solana_sdk::account::Account;
 use solana_sdk::commitment_config::CommitmentConfig;
-use solana_client::rpc_client::GetConfirmedSignaturesForAddress2Config;
-use solana_client::rpc_response::RpcConfirmedTransactionStatusWithSignature;
 use solana_sdk::keccak;
 use solana_sdk::pubkey::Pubkey;
-use std::str::FromStr;
 use solana_sdk::signature::Signature;
+use std::collections::hash_map::RandomState;
+use std::collections::HashSet;
 use std::mem::size_of;
+use std::str::FromStr;
 
 pub fn get_discriminant(type_name: &str) -> anyhow::Result<u64> {
     Ok(u64::from_le_bytes(
@@ -83,94 +85,126 @@ pub async fn get_book_levels(
     Ok(market.get_ladder(levels))
 }
 
-pub async fn get_transaction_history(
+pub async fn get_historical_signatures(
     market_pubkey: &Pubkey,
     trader_pubkey: &Pubkey,
-    lookback_slots: u64, 
-    sdk: &SDKClient,   
-)  -> anyhow::Result<Vec<Signature>>{
-
+    lookback_slots: u64,
+    sdk: &SDKClient,
+) -> anyhow::Result<Vec<Signature>> {
     let current_slot = sdk.client.get_slot()?;
     let mut target_slot = current_slot - lookback_slots;
-    let trader_signatures = get_signatures(trader_pubkey, target_slot, sdk).await?;
-    if trader_signatures.is_empty() {
+    let trader_transactions_with_signature =
+        get_transactions_with_signature(trader_pubkey, target_slot, sdk).await?;
+    if trader_transactions_with_signature.is_empty() {
         return Ok(Vec::new());
     }
 
-    let last_trader_slot = trader_signatures.last().unwrap().slot;
+    let last_trader_slot = trader_transactions_with_signature.last().unwrap().slot;
     if last_trader_slot > target_slot {
         target_slot = last_trader_slot;
     }
-    let market_signatures = get_signatures(market_pubkey, target_slot, sdk).await?; 
-    if market_signatures.is_empty() {
+    let market_transactions_with_signature =
+        get_transactions_with_signature(market_pubkey, target_slot, sdk).await?;
+    if market_transactions_with_signature.is_empty() {
         println!("No events found for this market");
         return Ok(Vec::new());
     }
+    // Filter down to only the signatures in each transaction
+    let trader_signatures: Vec<Signature> = trader_transactions_with_signature
+        .iter()
+        .map(|x| Signature::from_str(&x.signature).unwrap())
+        .collect();
+    let market_signatures: HashSet<Signature, RandomState> = HashSet::from_iter(
+        market_transactions_with_signature
+            .iter()
+            .map(|x| Signature::from_str(&x.signature).unwrap()),
+    );
 
     // create a vector of signatures that are the intersection of market and trader transactions
-    let joint_signatures: Vec<&RpcConfirmedTransactionStatusWithSignature>  = trader_signatures.iter().filter(|x| market_signatures.contains(x)).collect();
-    let joint_signatures_filtered: Vec<Signature> = joint_signatures.iter().map(|x| Signature::from_str(&x.signature).unwrap()).collect();
+    let joint_signatures: Vec<Signature> = trader_signatures
+        .into_iter()
+        .filter(|x| market_signatures.contains(x))
+        .collect();
 
-    Ok(joint_signatures_filtered)
+    Ok(joint_signatures)
 }
 
-pub async fn get_market_transaction_history_excluding_trader(
+pub async fn get_historical_market_signatures_exluding_trader(
     market_pubkey: &Pubkey,
     trader_pubkey: &Pubkey,
-    lookback_slots: u64, 
-    sdk: &SDKClient,   
-)  -> anyhow::Result<Vec<Signature>>{
+    lookback_slots: u64,
+    sdk: &SDKClient,
+) -> anyhow::Result<Vec<Signature>> {
     let current_slot = sdk.client.get_slot()?;
     let target_slot = current_slot - lookback_slots;
-    let trader_signatures = get_signatures(trader_pubkey, target_slot, sdk).await?;
-    let market_signatures = get_signatures(market_pubkey, target_slot, sdk).await?; 
-    if market_signatures.is_empty() {
+    let trader_transactions_with_signature =
+        get_transactions_with_signature(trader_pubkey, target_slot, sdk).await?;
+    let market_transactions_with_signature =
+        get_transactions_with_signature(market_pubkey, target_slot, sdk).await?;
+    if market_transactions_with_signature.is_empty() {
         println!("No events found for this market");
         return Ok(Vec::new());
     }
 
-    // create a vector of signatures of all market events not initiated by the trader
-    let joint_signatures: Vec<&RpcConfirmedTransactionStatusWithSignature>  = market_signatures.iter().filter(|x| !trader_signatures.contains(x)).collect();
-    let joint_signatures_filtered: Vec<Signature> = joint_signatures.iter().map(|x| Signature::from_str(&x.signature).unwrap()).collect();
+    // Filter down to only the signatures in each transaction
+    let trader_signatures: HashSet<Signature, RandomState> = HashSet::from_iter(
+        trader_transactions_with_signature
+            .iter()
+            .map(|x| Signature::from_str(&x.signature).unwrap()),
+    );
+    let market_signatures: Vec<Signature> = market_transactions_with_signature
+        .iter()
+        .map(|x| Signature::from_str(&x.signature).unwrap())
+        .collect();
 
-    Ok(joint_signatures_filtered)
+    // create a vector of signatures of all market events not initiated by the trader
+    let joint_signatures: Vec<Signature> = market_signatures
+        .into_iter()
+        .filter(|x| !trader_signatures.contains(x))
+        .collect();
+
+    Ok(joint_signatures)
 }
 
-pub async fn get_signatures( 
+pub async fn get_transactions_with_signature(
     pubkey: &Pubkey,
     min_slot: u64,
     sdk: &SDKClient,
-) -> anyhow::Result<Vec<RpcConfirmedTransactionStatusWithSignature>>{ 
-    let mut signatures = vec![];
+) -> anyhow::Result<Vec<RpcConfirmedTransactionStatusWithSignature>> {
+    let mut transactions_with_signature = vec![];
 
-    let mut config = GetConfirmedSignaturesForAddress2Config{ 
+    let mut config = GetConfirmedSignaturesForAddress2Config {
         before: None,
         until: None,
         limit: None,
-        commitment: None 
+        commitment: None,
     };
     loop {
-        let next_signatures = sdk.client.get_signatures_for_address_with_config(pubkey, config)?;
+        let next_signatures = sdk
+            .client
+            .get_signatures_for_address_with_config(pubkey, config)?;
         if next_signatures.last().is_none() {
             break;
         }
         let last_signature = next_signatures.last().unwrap();
         if last_signature.slot < min_slot {
-            // append all signatures before min slot 
-            signatures.extend(next_signatures.into_iter().take_while(|sig| sig.slot >= min_slot));
+            // append all signatures before min slot
+            transactions_with_signature.extend(
+                next_signatures
+                    .into_iter()
+                    .take_while(|sig| sig.slot >= min_slot),
+            );
             break;
         }
 
-        config = GetConfirmedSignaturesForAddress2Config{ 
+        config = GetConfirmedSignaturesForAddress2Config {
             before: Some(Signature::from_str(&last_signature.signature).unwrap()),
             until: None,
             limit: None,
-            commitment: None 
+            commitment: None,
         };
-        signatures.extend(next_signatures);
-
+        transactions_with_signature.extend(next_signatures);
     }
 
-    Ok(signatures)
+    Ok(transactions_with_signature)
 }
-

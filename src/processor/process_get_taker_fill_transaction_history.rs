@@ -13,22 +13,19 @@ pub async fn process_get_taker_fill_transaction_history(
     sdk: &SDKClient,
 ) -> anyhow::Result<()> {
     let transaction_history =
-        get_transaction_history(market_pubkey, trader_pubkey, lookback_slots, &sdk).await?;
+        get_historical_signatures(market_pubkey, trader_pubkey, lookback_slots, &sdk).await?;
     let mut events = vec![];
     let mut failures = vec![];
     for sig in transaction_history {
-        let transaction_events = sdk.parse_events_from_transaction(&sig).await;
+        let mut transaction_events = sdk.parse_events_from_transaction(&sig).await;
+        // parse fails a small amount of the time; retry once
+        if transaction_events.is_none() {
+            transaction_events = sdk.parse_events_from_transaction(&sig).await;
+        }
 
         match transaction_events {
             Some(transaction_events) => events.extend(transaction_events),
-            None => {
-                // parse (seemingly) arbitrary fails a low % of the time, so we'll retry once
-                let retry = sdk.parse_events_from_transaction(&sig).await;
-                match retry {
-                    Some(retry) => events.extend(retry),
-                    None => failures.push(sig),
-                }
-            },
+            None => failures.push(sig),
         }
     }
 
