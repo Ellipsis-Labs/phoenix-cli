@@ -23,10 +23,13 @@ use solana_sdk::signer::Signer;
 struct Args {
     #[clap(subcommand)]
     command: PhoenixCLICommand,
+    /// Optionally include your RPC endpoint. Use "local", "dev", "main" for default endpoints. Defaults to your Solana CLI config file.
     #[clap(global = true, short, long)]
     url: Option<String>,
+    /// Optionally include your keypair path. Defaults to your Solana CLI config file.
     #[clap(global = true, short, long)]
     keypair_path: Option<String>,
+    /// Optionally include a commitment level. Defaults to your Solana CLI config file.
     #[clap(global = true, short, long)]
     commitment: Option<String>,
 }
