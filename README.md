@@ -16,7 +16,7 @@ To view a list of all available commands, run `phoenix-cli --help`
 <img width="1072" alt="image" src="https://user-images.githubusercontent.com/9097655/208983165-b5472419-f006-4e64-904e-e34f42bac6cc.png">
 
 
-To zoom in on a specific command, `run phoenix-cli <COMMAND> --help`
+To zoom in on a specific command, run `phoenix-cli <COMMAND> --help`
 
 Optionally include the following parameters when running the cli: 
 * `-u, --url` Include your RPC endpoint. Use "local", "dev", and "main" for the respective default endpoints. Defaults to your Solana CLI config settings - if the config isn't found, defaults to mainnet. 
