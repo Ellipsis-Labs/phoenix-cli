@@ -131,20 +131,69 @@ market: 5iLqmcg8vifdnnw6wEpVtQxFE4Few5uiceDWzi3jvzH8, event_type: Place, timesta
 ### get-market-status
 Returns the status of a given market. Markets can be in the following states: Active, PostOnly, Paused, Closed, Uninitialized, Tombstoned.
 
+`$ phoenix-cli -u dev get-market-status -m 5iLqmcg8vifdnnw6wEpVtQxFE4Few5uiceDWzi3jvzH8`
+```
+Market status: Active
+```
+
 ### get-seat-info
 Returns the status and address of a trader's seat. By default, returns the payer's seat info. Seats can be in the following states: Approved, NotApproved, Retired
+
+`$ phoenix-cli -u dev get-seat-info -m 5iLqmcg8vifdnnw6wEpVtQxFE4Few5uiceDWzi3jvzH8 -t mkrc4jMLEPRoKLUnNL7Ctnwb7uJykbwiYvFjB4sw9Z9`
+```
+Seat address: mg6uXraBkvi7ccbnKvJoXgyjUVDBSqcxDJysPqiMYau
+Seat status: Approved
+```
 
 ### get-open-orders
 Returns all open orders on a given market for a trader. By default, returns the payer's open orders. Returns the side, orderID, price in ticks, price, and size for each order. 
 
+`$ phoenix-cli -u dev get-open-orders -m 5iLqmcg8vifdnnw6wEpVtQxFE4Few5uiceDWzi3jvzH8 -t mkrc4jMLEPRoKLUnNL7Ctnwb7uJykbwiYvFjB4sw9Z9`
+```
+Open Bids
+ID                   | Price (ticks)        | Price      | Quantity  
+18446744073708399662 | 2385                 | 11.925     | 5.870     
+18446744073708399660 | 2384                 | 11.920     | 15.100    
+18446744073708399658 | 2382                 | 11.910     | 30.226    
+18446744073708399656 | 2380                 | 11.900     | 67.226    
+18446744073708399654 | 2377                 | 11.885     | 111.064   
+
+Open Asks
+ID                   | Price (ticks)        | Price      | Quantity  
+1151952              | 2387                 | 11.935     | 4.865     
+1151954              | 2388                 | 11.940     | 15.075    
+1151956              | 2390                 | 11.950     | 30.125    
+1151958              | 2392                 | 11.960     | 66.889    
+1151960              | 2395                 | 11.975     | 110.229   
+1151962              | 2399                 | 11.995     | 166.736   
+```
+
 ### request-seat
 Requests a seat for the payer on the given market. Note that the seat will have to then be approved by the market authority in order to place limit orders. 
+
+`$ phoenix-cli -u dev request-seat -m 5iLqmcg8vifdnnw6wEpVtQxFE4Few5uiceDWzi3jvzH8`
+```
+Requested seat, transaction signature: gbu5aqybhciNLamj5E9Bb1Xof387wTE1UJGJCT1cn7AHX7mQ1Air6bvSKNnoH7Hm3pq1JTQCDAcmyixEyQeS6FH
+```
 
 ### mint-tokens
 Mints tokens of the ticker_string (example: SOL) to the given pubkey. Default amount is 100_000_000_000. 
 
+`$ phoenix-cli -u dev mint-tokens -m SOL -a 100000 -r aChXgDyJn7g5BCkjccisGc78LrQZKEmNgt5sz8Tdkzn`
+```
+Creating ATA
+100000 Tokens minted! Mint pubkey: B1sL3zxwyVnDGzRWCAsBkjL23wyu8HgwQP4XxgnHiSrv,  Recipient address: aChXgDyJn7g5BCkjccisGc78LrQZKEmNgt5sz8Tdkzn
+```
+
 ### mint-tokens-for-market
 Mints the base and quote tokens of the given market to the given pubkey. Default amounts are 100_000_000_000 for base and 100_000_000 for quote.
+
+`$ phoenix-cli -u dev mint-tokens-for-market -m 5iLqmcg8vifdnnw6wEpVtQxFE4Few5uiceDWzi3jvzH8 -r aChXgDyJn7g5BCkjccisGc78LrQZKEmNgt5sz8Tdkzn`
+```
+Creating ATA for quote token
+Tokens minted! Signature: 3fnHTcRTfSrU4ycoE94p2Pn4zCA1389Xmr8uB8QvyYEPxWJWxfDiCa4Upp375Pqc7QC7pUg246dRMCp7PAbMRGnz
+```
+
 
 
 
