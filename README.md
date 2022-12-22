@@ -19,8 +19,7 @@ cd phoenix-cli
 
 Download the latest release and extract the binary from the tar file
 ```
-curl -OL https://github.com/Ellipsis-Labs/phoenix-cli/releases/download/v0.1.0/phoenix-cli-0.1.0-x86_64-apple-darwin.tar.gz 
-tar xf phoenix-cli-0.1.0-x86_64-apple-darwin.tar.gz 
+curl -L https://github.com/Ellipsis-Labs/phoenix-cli/releases/download/v0.1.0/phoenix-cli-0.1.0-x86_64-apple-darwin.tar.gz | tar xz
 ```
 Update your PATH to include the phoenix-cli binary 
 ```
@@ -41,8 +40,7 @@ cd phoenix-cli
 
 Download the latest release and extract the binary from the tar file
 ```
-curl -OL https://github.com/Ellipsis-Labs/phoenix-cli/releases/download/v0.1.0/phoenix-cli-0.1.0-x86_64-unknown-linux-gnu.tar.gz
-tar xf phoenix-cli-0.1.0-x86_64-unknown-linux-gnu.tar.gz
+curl -L https://github.com/Ellipsis-Labs/phoenix-cli/releases/download/v0.1.0/phoenix-cli-0.1.0-x86_64-unknown-linux-gnu.tar.gz  | tar xz
 ```
 Update your PATH to include the phoenix-cli binary 
 ```
