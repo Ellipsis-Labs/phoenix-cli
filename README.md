@@ -9,22 +9,11 @@ CLI for interacting with the Phoenix DEX
 
 ## Installation 
 
-### MacOS
-
-Open a terminal window and create a directory for the cli
+For Linux and MacOS, run the install script from your terminal
 ```
-mkdir phoenix-cli
-cd phoenix-cli
+bash <(curl -sSf https://raw.githubusercontent.com/Ellipsis-Labs/phoenix-cli/master/phoenix-cli-install.sh)
 ```
 
-Download the latest release and extract the binary from the tar file
-```
-curl -L https://github.com/Ellipsis-Labs/phoenix-cli/releases/download/v0.1.0/phoenix-cli-0.1.0-x86_64-apple-darwin.tar.gz | tar xz
-```
-Update your PATH to include the phoenix-cli binary 
-```
-export PATH=$PWD/:$PATH
-```
 Test the installation of cli by running
 ```
 phoenix-cli --help
