@@ -19,28 +19,6 @@ Test the installation of cli by running
 phoenix-cli --help
 ```
 
-### Linux
-
-Open a terminal window and create a directory for the cli
-```
-mkdir phoenix-cli
-cd phoenix-cli
-```
-
-Download the latest release and extract the binary from the tar file
-```
-curl -L https://github.com/Ellipsis-Labs/phoenix-cli/releases/download/v0.1.0/phoenix-cli-0.1.0-x86_64-unknown-linux-gnu.tar.gz  | tar xz
-```
-Update your PATH to include the phoenix-cli binary 
-```
-export PATH=$PWD/:$PATH
-```
-Test the installation of cli by running
-```
-phoenix-cli --help
-```
-
-
 ## Running the CLI
 
 To view a list of all available commands, run `phoenix-cli --help`
