@@ -1,12 +1,12 @@
-use crate::helpers::print_helpers::*;
 use crate::helpers::market_helpers::*;
+use crate::helpers::print_helpers::*;
 use borsh::BorshDeserialize;
 use ellipsis_client::EllipsisClient;
 use phoenix_types::market::MarketHeader;
 use std::mem::size_of;
 
-pub fn process_get_all_markets(client: &EllipsisClient) -> anyhow::Result<()> {
-    let accounts = get_all_markets(client)?;
+pub async fn process_get_all_markets(client: &EllipsisClient) -> anyhow::Result<()> {
+    let accounts = get_all_markets(client).await?;
 
     println!("Found {} market(s)", accounts.len());
 
