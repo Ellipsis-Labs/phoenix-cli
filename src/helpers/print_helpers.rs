@@ -170,28 +170,28 @@ pub fn print_trader_state(sdk: &SDKClient, pubkey: &Pubkey, state: &TraderState)
     println!(
         "Base token locked: {}",
         get_decimal_string(
-            sdk.base_lots_to_base_amount(state.base_lots_locked),
+            sdk.base_lots_to_base_atoms(state.base_lots_locked),
             sdk.base_decimals
         )
     );
     println!(
         "Base token free: {}",
         get_decimal_string(
-            sdk.base_lots_to_base_amount(state.base_lots_free),
+            sdk.base_lots_to_base_atoms(state.base_lots_free),
             sdk.base_decimals
         )
     );
     println!(
         "Quote token locked: {}",
         get_decimal_string(
-            sdk.quote_lots_to_quote_amount(state.quote_lots_locked),
+            sdk.quote_lots_to_quote_atoms(state.quote_lots_locked),
             sdk.quote_decimals
         )
     );
     println!(
         "Quote token free: {}",
         get_decimal_string(
-            sdk.quote_lots_to_quote_amount(state.quote_lots_free),
+            sdk.quote_lots_to_quote_atoms(state.quote_lots_free),
             sdk.quote_decimals
         )
     );
@@ -219,7 +219,7 @@ pub fn log_market_events(sdk: &SDKClient, market_events: Vec<PhoenixEvent>) {
                     (sdk.ticks_to_float_price(price_in_ticks)).to_string(),
                     format!("{:?}", side_filled),
                     get_decimal_string(
-                        sdk.base_lots_to_base_amount(base_lots_filled),
+                        sdk.base_lots_to_base_atoms(base_lots_filled),
                         sdk.base_decimals,
                     ),
                 ];
@@ -244,7 +244,7 @@ pub fn log_market_events(sdk: &SDKClient, market_events: Vec<PhoenixEvent>) {
                     (sdk.ticks_to_float_price(price_in_ticks)).to_string(),
                     format!("{:?}", side),
                     get_decimal_string(
-                        sdk.base_lots_to_base_amount(base_lots_placed),
+                        sdk.base_lots_to_base_atoms(base_lots_placed),
                         sdk.base_decimals,
                     ),
                 ];
@@ -271,7 +271,7 @@ pub fn log_market_events(sdk: &SDKClient, market_events: Vec<PhoenixEvent>) {
                     (sdk.ticks_to_float_price(price_in_ticks)).to_string(),
                     format!("{:?}", side),
                     get_decimal_string(
-                        sdk.base_lots_to_base_amount(base_lots_removed),
+                        sdk.base_lots_to_base_atoms(base_lots_removed),
                         sdk.base_decimals,
                     ),
                 ];
@@ -283,7 +283,7 @@ pub fn log_market_events(sdk: &SDKClient, market_events: Vec<PhoenixEvent>) {
                 } = fill_summary;
                 println!(
                     "Total quote token fees paid: {}",
-                    sdk.quote_amount_to_quote_unit_as_float(total_quote_fees)
+                    sdk.quote_atoms_to_quote_unit_as_float(total_quote_fees)
                 );
             }
             _ => {
