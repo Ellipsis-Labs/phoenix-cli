@@ -33,7 +33,7 @@ pub async fn get_seat_status(
     Ok(seat_status)
 }
 
-pub fn get_all_markets(client: &EllipsisClient) -> anyhow::Result<Vec<(Pubkey, Account)>> {
+pub async fn get_all_markets(client: &EllipsisClient) -> anyhow::Result<Vec<(Pubkey, Account)>> {
     // Get discriminant for market account
     let market_account_discriminant = get_discriminant("phoenix::program::accounts::MarketHeader")?;
 
@@ -56,7 +56,9 @@ pub fn get_all_markets(client: &EllipsisClient) -> anyhow::Result<Vec<(Pubkey, A
         ..RpcProgramAccountsConfig::default()
     };
 
-    let accounts = client.get_program_accounts_with_config(&phoenix::id(), config)?;
+    let accounts = client
+        .get_program_accounts_with_config(&phoenix::id(), config)
+        .await?;
     Ok(accounts)
 }
 

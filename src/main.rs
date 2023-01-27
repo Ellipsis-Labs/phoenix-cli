@@ -14,7 +14,7 @@ use clap::Parser;
 use ellipsis_client::EllipsisClient;
 use phoenix_sdk::sdk_client::*;
 use solana_cli_config::{Config, ConfigInput, CONFIG_FILE};
-use solana_client::rpc_client::RpcClient;
+use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::signer::keypair::{read_keypair_file, Keypair};
 use solana_sdk::signer::Signer;
 
@@ -62,7 +62,7 @@ async fn main() -> anyhow::Result<()> {
     let payer = get_payer_keypair_from_path(&cli.keypair_path.unwrap_or(config.keypair_path))?;
     let network_url = &get_network(&cli.url.unwrap_or(config.json_rpc_url)).to_string();
     let client = EllipsisClient::from_rpc(
-        RpcClient::new_with_commitment(network_url, commitment),
+        RpcClient::new_with_commitment(network_url.to_string(), commitment),
         &payer,
     )?;
 
@@ -71,7 +71,7 @@ async fn main() -> anyhow::Result<()> {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_market(&market_pubkey, &sdk).await
         }
-        PhoenixCLICommand::GetAllMarkets => process_get_all_markets(&client),
+        PhoenixCLICommand::GetAllMarkets => process_get_all_markets(&client).await,
         PhoenixCLICommand::GetTradersForMarket { market_pubkey } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_traders_for_market(&market_pubkey, &sdk).await
