@@ -1,6 +1,6 @@
 [package]
 name = "phoenix-cli"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -12,7 +12,7 @@ phoenix-sdk = { git = "https://github.com/Ellipsis-Labs/phoenix-sdk", branch = "
 lib-sokoban = "0.2.4" 
 shellexpand = "2.1.2"
 solana-sdk = "1.10.32"
-ellipsis-client = "0.1.9"
+ellipsis-client = "0.1.13"
 solana-client = "1.10.32"
 solana-account-decoder = "1.14.7"
 solana-cli-config = "1.14.7"
