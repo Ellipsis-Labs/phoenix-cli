@@ -41,15 +41,18 @@ case "$PROCESSOR" in
 esac
  
 BIN="phoenix-cli"
-VERSION="0.1.0-x86_64-unknown-linux-gnu"
+SUFFIX="linux"
 
 if [ "$OS_FLAVOUR" = Darwin ]; then
-
-    VERSION="0.1.0-x86_64-apple-darwin"
-
+    SUFFIX="macos"
 fi
 
-DIST="$VERSION"
+if ["$OS_FLAVOUR" = Windows ]; then
+    echo "Windows is not currently supported using this installer."
+    exit 1
+fi
+
+DIST="verifier-cli-$SUFFIX"
 
 # creates a temporary directory to save the distribution file
 SOURCE="$(mktemp -d)"
@@ -58,9 +61,9 @@ echo "$(CYN "1.") 🖥  $(CYN "Downloading distribution")"
 echo ""
 
 # downloads the distribution file
-REMOTE="https://github.com/Ellipsis-Labs/phoenix-cli/releases/download/v0.1.0/"
-echo "  => downloading from: $(CYN $REMOTE$BIN"-"$DIST)"
-curl -L $REMOTE$BIN"-"$DIST --output "$SOURCE/$DIST" 
+REMOTE="https://github.com/Ellipsis-Labs/phoenix-cli/releases/latest/download/"
+echo "  => downloading from: $(CYN $REMOTE$DIST)"
+curl -L $REMOTE$DIST --output "$SOURCE/$DIST" 
 abort_on_error $?
 
 SIZE=$(wc -c "$SOURCE/$DIST" | grep -oE "[0-9]+" | head -n 1)
