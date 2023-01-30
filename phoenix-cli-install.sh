@@ -52,7 +52,7 @@ if ["$OS_FLAVOUR" = Windows ]; then
     exit 1
 fi
 
-DIST="verifier-cli-$SUFFIX"
+DIST="phoenix-cli-$SUFFIX"
 
 # creates a temporary directory to save the distribution file
 SOURCE="$(mktemp -d)"
