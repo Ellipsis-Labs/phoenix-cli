@@ -1,0 +1,67 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger when a commit is tagged with a new version. TODO: Use a filter pattern for major releases only.
+
+jobs:
+  create_release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+
+  build_release:
+    name: Build Release
+    needs: create_release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        name: [
+            linux,
+            macos
+        ]
+
+        include:
+          - name: linux
+            os: ubuntu-latest
+            artifact_path: target/release/phoenix-cli
+            asset_name: phoenix-cli-linux
+          - name: macos
+            os: macos-latest
+            artifact_path: target/release/phoenix-cli
+            asset_name: phoenix-cli-macos
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v1
+            
+      - name: Use Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+      
+      - name: Build
+        run: cargo build --release --locked
+
+      - name: Rename executable based on OS
+        env:
+          ASSET_NAME: ${{matrix.asset_name}}
+          EXEC_PATH: ${{matrix.artifact_path}}
+        run: | 
+          echo "asset name: ${ASSET_NAME} executable path: ${EXEC_PATH}"
+          mv ${EXEC_PATH} ${ASSET_NAME}
+
+      - name: Upload binaries to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{matrix.asset_name}}
+          fail_on_unmatched_files: true
