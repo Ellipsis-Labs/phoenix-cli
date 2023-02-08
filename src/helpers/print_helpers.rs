@@ -72,9 +72,23 @@ pub fn print_book(sdk: &SDKClient, book: &Ladder) {
 }
 
 pub fn get_precision(mut target: u64) -> usize {
+    let is_prime = |x| {
+        let mut i = 2;
+        while i * i <= x {
+            if x % i == 0 {
+                return false;
+            }
+            i += 1;
+        }
+        true
+    };
     let mut prime_factors = BTreeMap::new();
     let mut candidate = 2;
     while target > 1 {
+        if !is_prime(candidate) {
+            candidate += 1;
+            continue;
+        }
         if target % candidate == 0 {
             *prime_factors.entry(candidate).or_insert(0) += 1;
             target /= candidate;
