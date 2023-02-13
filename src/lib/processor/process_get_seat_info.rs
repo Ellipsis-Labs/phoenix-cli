@@ -1,8 +1,7 @@
 use crate::helpers::market_helpers::*;
 use phoenix_sdk::sdk_client::*;
-use solana_sdk::pubkey::Pubkey;
 use phoenix_types as phoenix;
-
+use solana_sdk::pubkey::Pubkey;
 
 pub async fn process_get_seat_info(
     market_pubkey: &Pubkey,

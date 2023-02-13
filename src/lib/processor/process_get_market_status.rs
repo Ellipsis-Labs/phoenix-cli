@@ -1,7 +1,7 @@
 use borsh::BorshDeserialize;
-use phoenix_types::market::MarketStatus;
 use phoenix_sdk::sdk_client::*;
 use phoenix_types::market::MarketHeader;
+use phoenix_types::market::MarketStatus;
 use solana_sdk::pubkey::Pubkey;
 use std::mem::size_of;
 
