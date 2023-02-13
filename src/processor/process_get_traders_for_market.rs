@@ -20,6 +20,11 @@ pub async fn process_get_traders_for_market(
         .ok_or_else(|| anyhow::anyhow!("Failed to load market"))?
         .inner;
 
+    println!(
+        "Found {} trader(s). Printing traders with locked or free lots",
+        market.get_registered_traders().len()
+    );
+
     // Print trader information
     market
         .get_registered_traders()

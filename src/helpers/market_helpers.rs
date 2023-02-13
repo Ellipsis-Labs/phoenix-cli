@@ -62,6 +62,34 @@ pub async fn get_all_markets(client: &EllipsisClient) -> anyhow::Result<Vec<(Pub
     Ok(accounts)
 }
 
+pub async fn get_all_seats(client: &EllipsisClient) -> anyhow::Result<Vec<(Pubkey, Account)>> {
+    // Get discriminant for seat account
+    let seat_account_discriminant = get_discriminant("phoenix::program::accounts::Seat")?;
+
+    #[allow(deprecated)]
+    let memcmp = RpcFilterType::Memcmp(Memcmp {
+        offset: 0,
+        bytes: MemcmpEncodedBytes::Bytes(seat_account_discriminant.to_le_bytes().to_vec()),
+        encoding: None,
+    });
+
+    let config = RpcProgramAccountsConfig {
+        filters: Some(vec![memcmp]),
+        account_config: RpcAccountInfoConfig {
+            encoding: Some(UiAccountEncoding::Base64),
+            commitment: Some(CommitmentConfig::confirmed()),
+            ..RpcAccountInfoConfig::default()
+        },
+        ..RpcProgramAccountsConfig::default()
+    };
+
+    let accounts = client
+        .get_program_accounts_with_config(&phoenix::id(), config)
+        .await?;
+
+    Ok(accounts)
+}
+
 pub async fn get_book_levels(
     market_pubkey: &Pubkey,
     client: &EllipsisClient,
@@ -78,4 +106,14 @@ pub async fn get_book_levels(
         .inner;
 
     Ok(market.get_ladder(levels))
+}
+
+pub async fn get_market_header(
+    sdk: &SDKClient,
+    market_pubkey: &Pubkey,
+) -> anyhow::Result<MarketHeader> {
+    let market_account_data = sdk.client.get_account_data(market_pubkey).await?;
+    let (header_bytes, _market_bytes) = market_account_data.split_at(size_of::<MarketHeader>());
+    let header = MarketHeader::try_from_slice(header_bytes)?;
+    Ok(header)
 }

@@ -108,6 +108,7 @@ pub async fn print_market_details(
     sdk: &SDKClient,
     market_pubkey: &Pubkey,
     market_metadata: &MarketMetadata,
+    market_header: &MarketHeader,
     taker_fees: u16,
 ) -> anyhow::Result<()> {
     let base_pubkey = market_metadata.base_mint;
@@ -154,6 +155,12 @@ pub async fn print_market_details(
         )
     );
     println!("Taker fees in basis points: {}", taker_fees);
+    println!(
+        "Fee destination pubkey: {:?}",
+        market_header.fee_destination
+    );
+    println!("Successor pubkey: {:?}", market_header.successor);
+    println!("Sequence number: {}", market_header.market_sequence_number);
     Ok(())
 }
 

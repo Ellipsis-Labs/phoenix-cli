@@ -8,45 +8,27 @@ pub enum PhoenixCLICommand {
     /// Get summary information on all markets
     GetAllMarkets,
     /// Get detailed information on a specific market
-    GetMarket {
-        #[clap(short, long, required = true)]
-        market_pubkey: Pubkey,
-    },
+    GetMarket { market_pubkey: Pubkey },
     /// Get active traders for a given market
-    GetTradersForMarket {
-        #[clap(short, long, required = true)]
-        market_pubkey: Pubkey,
-    },
+    GetTradersForMarket { market_pubkey: Pubkey },
     /// Get the best bid and ask price for a given market
-    GetTopOfBook {
-        #[clap(short, long, required = true)]
-        market_pubkey: Pubkey,
-    },
+    GetTopOfBook { market_pubkey: Pubkey },
     /// Get the first N levels of the order book for a given market.
     /// Default is 10 levels
     GetBookLevels {
-        #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
         #[clap(short, long, required = false, default_value = "10")]
         levels: u64,
     },
     /// Get the full order book for a given market
-    GetFullBook {
-        #[clap(short, long, required = true)]
-        market_pubkey: Pubkey,
-    },
+    GetFullBook { market_pubkey: Pubkey },
     /// Get the market events that occured in a given transaction signature
     GetTransaction {
-        #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
-        #[clap(short, long, required = true)]
         signature: Signature,
     },
     /// Get the current status of a market
-    GetMarketStatus {
-        #[clap(short, long, required = true)]
-        market_pubkey: Pubkey,
-    },
+    GetMarketStatus { market_pubkey: Pubkey },
     /// Get the status and address of a seat for a given market and trader
     GetSeatInfo {
         #[clap(short, long, required = true)]
@@ -62,10 +44,7 @@ pub enum PhoenixCLICommand {
         trader_pubkey: Option<Pubkey>,
     },
     /// Request a seat for the current payer for a given market. Note that the seat will have to then be approved by the market authority.
-    RequestSeat {
-        #[clap(short, long, required = true)]
-        market_pubkey: Pubkey,
-    },
+    RequestSeat { market_pubkey: Pubkey },
     /// Mint tokens to a recipient for a given ticker string (for example SOL or USDC). Default amount is 100_000_000_000.
     /// Devnet only
     MintTokens {

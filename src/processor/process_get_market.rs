@@ -20,5 +20,5 @@ pub async fn process_get_market(market_pubkey: &Pubkey, sdk: &SDKClient) -> anyh
 
     let taker_fees = market.get_taker_bps();
 
-    print_market_details(sdk, market_pubkey, market_metadata, taker_fees).await
+    print_market_details(sdk, market_pubkey, market_metadata, &header, taker_fees).await
 }
