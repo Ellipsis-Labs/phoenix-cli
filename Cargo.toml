@@ -16,7 +16,6 @@ path = "src/lib/lib.rs"
 [dependencies]
 anyhow = "1.0.66"
 clap = { version = "4.0.26", features = ["derive"] }
-lib-sokoban = "0.2.4" 
 shellexpand = "2.1.2"
 solana-sdk = "1.10.32"
 ellipsis-client = "0.1.13"
