@@ -1,5 +1,8 @@
 use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use ellipsis_client::EllipsisClient;
+use phoenix::market::Market;
+use phoenix::market::SeatApprovalStatus;
 use phoenix_sdk::sdk_client::*;
 use phoenix_types as phoenix;
 use phoenix_types::dispatch::load_with_dispatch;
@@ -12,6 +15,7 @@ use solana_sdk::account::Account;
 use solana_sdk::commitment_config::CommitmentConfig;
 use solana_sdk::keccak;
 use solana_sdk::pubkey::Pubkey;
+use std::collections::BTreeMap;
 use std::mem::size_of;
 
 pub fn get_discriminant(type_name: &str) -> anyhow::Result<u64> {
@@ -62,6 +66,20 @@ pub async fn get_all_markets(client: &EllipsisClient) -> anyhow::Result<Vec<(Pub
     Ok(accounts)
 }
 
+// Get each trader's trader index and map to the trader's pubkey
+pub fn get_all_registered_traders(market: &dyn Market) -> BTreeMap<u64, Pubkey> {
+    let mut trader_index_to_pubkey = BTreeMap::new();
+    market
+        .get_registered_traders()
+        .iter()
+        .map(|(trader, _)| *trader)
+        .for_each(|trader| {
+            trader_index_to_pubkey
+                .insert(market.get_trader_address(&trader).unwrap() as u64, trader);
+        });
+    trader_index_to_pubkey
+}
+
 pub async fn get_all_seats(client: &EllipsisClient) -> anyhow::Result<Vec<(Pubkey, Account)>> {
     // Get discriminant for seat account
     let seat_account_discriminant = get_discriminant("phoenix::program::accounts::Seat")?;
@@ -106,6 +124,44 @@ pub async fn get_book_levels(
         .inner;
 
     Ok(market.get_ladder(levels))
+}
+
+pub async fn get_all_approved_seats_for_market(
+    sdk: &SDKClient,
+) -> anyhow::Result<Vec<(Pubkey, Account)>> {
+    // Get discriminant for seat account
+    let seat_account_discriminant = get_discriminant("phoenix::program::accounts::Seat")?;
+
+    // Get Program Accounts, filtering for the market account discriminant
+    let memcmp = RpcFilterType::Memcmp(Memcmp::new_raw_bytes(
+        0,
+        [
+            seat_account_discriminant.to_le_bytes().to_vec(),
+            sdk.active_market_key.to_bytes().to_vec(),
+        ]
+        .concat(),
+    ));
+
+    let approved = RpcFilterType::Memcmp(Memcmp::new_raw_bytes(
+        72,
+        SeatApprovalStatus::Approved.try_to_vec()?,
+    ));
+
+    let config = RpcProgramAccountsConfig {
+        filters: Some(vec![memcmp, approved]),
+        account_config: RpcAccountInfoConfig {
+            encoding: Some(UiAccountEncoding::Base64),
+            commitment: Some(CommitmentConfig::confirmed()),
+            ..RpcAccountInfoConfig::default()
+        },
+        ..RpcProgramAccountsConfig::default()
+    };
+
+    let accounts = sdk
+        .client
+        .get_program_accounts_with_config(&phoenix::id(), config)
+        .await?;
+    Ok(accounts)
 }
 
 pub async fn get_market_header(
