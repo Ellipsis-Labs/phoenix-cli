@@ -33,5 +33,5 @@ serde_json = "1.0"
 spl-associated-token-account = { version = "1.1.1", features = [ "no-entrypoint" ] } 
 phoenix-v1 = "0.1.1"
 phoenix-sdk = { git = "https://github.com/Ellipsis-Labs/phoenix-sdk", rev = "9e4e893bcb1af3d0148b20d4da266964fb3591e1" }
-devnet-token-faucet = { git = "https://github.com/Ellipsis-Labs/devnet-token-faucet", features = ["no-entrypoint"] }
+devnet-token-faucet = { git = "https://github.com/Ellipsis-Labs/devnet-token-faucet", features = ["no-entrypoint"], rev = "39b3b09b202eca299ad49e3fb6e9b6401e5453bf" }
 bytemuck = "1.13.0"
