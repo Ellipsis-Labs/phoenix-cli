@@ -33,6 +33,7 @@ pub enum PhoenixCLICommand {
     GetSeatInfo {
         #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
+        /// Pubkey of the trader associated with the seat. Defaults to the current payer
         #[clap(short, long, required = false)]
         trader_pubkey: Option<Pubkey>,
     },
@@ -40,6 +41,7 @@ pub enum PhoenixCLICommand {
     GetOpenOrders {
         #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
+        /// Pubkey of the trader for whom to get open orders. Defaults to the current payer
         #[clap(short, long, required = false)]
         trader_pubkey: Option<Pubkey>,
     },
@@ -53,6 +55,7 @@ pub enum PhoenixCLICommand {
         mint_ticker: String,
         #[clap(short, long, required = true)]
         recipient_pubkey: Pubkey,
+        /// Amount in atoms (1 * 10*(-decimals))
         #[clap(short, long, required = false, default_value = "100000000000")]
         amount: u64,
     },
@@ -63,8 +66,10 @@ pub enum PhoenixCLICommand {
         market_pubkey: Pubkey,
         #[clap(short, long, required = true)]
         recipient_pubkey: Pubkey,
+        /// Amount in atoms (1 * 10*(-decimals))
         #[clap(short, long, required = false, default_value = "100000000000")]
         base_amount: u64,
+        /// Amount in atoms (1 * 10*(-decimals))
         #[clap(short, long, required = false, default_value = "100000000")]
         quote_amount: u64,
     },

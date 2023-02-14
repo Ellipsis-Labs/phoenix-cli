@@ -1,5 +1,4 @@
 mod command;
-
 use crate::command::PhoenixCLICommand;
 use anyhow::anyhow;
 use clap::Parser;

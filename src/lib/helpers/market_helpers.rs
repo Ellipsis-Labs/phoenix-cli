@@ -1,13 +1,13 @@
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 use ellipsis_client::EllipsisClient;
-use phoenix::market::Market;
-use phoenix::market::SeatApprovalStatus;
+use phoenix::program::{load_with_dispatch, status::SeatApprovalStatus, MarketHeader};
+use phoenix::state::markets::FIFOOrderId;
+use phoenix::state::markets::FIFORestingOrder;
+use phoenix::state::markets::{Ladder, Market};
+use phoenix::state::OrderPacket;
+
 use phoenix_sdk::sdk_client::*;
-use phoenix_types as phoenix;
-use phoenix_types::dispatch::load_with_dispatch;
-use phoenix_types::market::Ladder;
-use phoenix_types::market::MarketHeader;
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig};
 use solana_client::rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType};
@@ -27,13 +27,13 @@ pub fn get_discriminant(type_name: &str) -> anyhow::Result<u64> {
 pub async fn get_seat_status(
     sdk: &SDKClient,
     seat_key: &Pubkey,
-) -> anyhow::Result<phoenix_types::market::SeatApprovalStatus> {
+) -> anyhow::Result<SeatApprovalStatus> {
     // Get seat account and deserialize
     let seat_acc = sdk.client.get_account(seat_key).await?;
     let mut seat_acc_data = seat_acc.data.to_vec();
     let (_, seat_approval_bytes) = seat_acc_data.split_at_mut(72);
     let status_as_u64 = u64::try_from_slice(&seat_approval_bytes[0..8])?;
-    let seat_status = phoenix_types::market::SeatApprovalStatus::from(status_as_u64);
+    let seat_status = SeatApprovalStatus::from(status_as_u64);
     Ok(seat_status)
 }
 
@@ -67,15 +67,16 @@ pub async fn get_all_markets(client: &EllipsisClient) -> anyhow::Result<Vec<(Pub
 }
 
 // Get each trader's trader index and map to the trader's pubkey
-pub fn get_all_registered_traders(market: &dyn Market) -> BTreeMap<u64, Pubkey> {
+pub fn get_all_registered_traders(
+    market: &dyn Market<Pubkey, FIFOOrderId, FIFORestingOrder, OrderPacket>,
+) -> BTreeMap<u64, Pubkey> {
     let mut trader_index_to_pubkey = BTreeMap::new();
     market
         .get_registered_traders()
         .iter()
         .map(|(trader, _)| *trader)
         .for_each(|trader| {
-            trader_index_to_pubkey
-                .insert(market.get_trader_address(&trader).unwrap() as u64, trader);
+            trader_index_to_pubkey.insert(market.get_trader_index(&trader).unwrap() as u64, trader);
         });
     trader_index_to_pubkey
 }
@@ -116,12 +117,11 @@ pub async fn get_book_levels(
     // Get market account
     let mut market_account_data = client.get_account_data(market_pubkey).await?;
     let (header_bytes, market_bytes) = market_account_data.split_at_mut(size_of::<MarketHeader>());
-    let header = MarketHeader::try_from_slice(header_bytes)?;
+    let header: &MarketHeader = bytemuck::try_from_bytes(header_bytes)
+        .map_err(|e| anyhow::anyhow!("Error getting market header. Error: {:?}", e))?;
 
     // Derserialize data and load into correct type
-    let market = load_with_dispatch(&header.market_size_params, market_bytes)
-        .ok_or_else(|| anyhow::anyhow!("Failed to load market"))?
-        .inner;
+    let market = load_with_dispatch(&header.market_size_params, market_bytes)?.inner;
 
     Ok(market.get_ladder(levels))
 }
@@ -170,6 +170,8 @@ pub async fn get_market_header(
 ) -> anyhow::Result<MarketHeader> {
     let market_account_data = sdk.client.get_account_data(market_pubkey).await?;
     let (header_bytes, _market_bytes) = market_account_data.split_at(size_of::<MarketHeader>());
-    let header = MarketHeader::try_from_slice(header_bytes)?;
-    Ok(header)
+    let header: &MarketHeader = bytemuck::try_from_bytes(header_bytes)
+        .map_err(|e| anyhow::anyhow!("Error getting market header. Error: {:?}", e))?;
+
+    Ok(header.clone())
 }

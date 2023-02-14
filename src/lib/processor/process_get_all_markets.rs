@@ -1,6 +1,6 @@
-use borsh::BorshDeserialize;
+use anyhow::anyhow;
 use ellipsis_client::EllipsisClient;
-use phoenix_types::market::MarketHeader;
+use phoenix::program::MarketHeader;
 use std::mem::size_of;
 
 use crate::helpers::{market_helpers::get_all_markets, print_helpers::print_market_summary_data};
@@ -15,7 +15,8 @@ pub async fn process_get_all_markets(client: &EllipsisClient) -> anyhow::Result<
         let (header_bytes, _market_bytes) =
             market_account.data.split_at_mut(size_of::<MarketHeader>());
 
-        let header = MarketHeader::try_from_slice(header_bytes)?;
+        let header = bytemuck::try_from_bytes(header_bytes)
+            .map_err(|e| anyhow!("Error getting market header. Error: {:?}", e))?;
 
         print_market_summary_data(&market_pubkey, &header);
     }
