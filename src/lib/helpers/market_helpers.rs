@@ -173,5 +173,5 @@ pub async fn get_market_header(
     let header: &MarketHeader = bytemuck::try_from_bytes(header_bytes)
         .map_err(|e| anyhow::anyhow!("Error getting market header. Error: {:?}", e))?;
 
-    Ok(header.clone())
+    Ok(*header)
 }

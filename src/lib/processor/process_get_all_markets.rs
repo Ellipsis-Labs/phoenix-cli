@@ -18,7 +18,7 @@ pub async fn process_get_all_markets(client: &EllipsisClient) -> anyhow::Result<
         let header = bytemuck::try_from_bytes(header_bytes)
             .map_err(|e| anyhow!("Error getting market header. Error: {:?}", e))?;
 
-        print_market_summary_data(&market_pubkey, &header);
+        print_market_summary_data(&market_pubkey, header);
     }
     Ok(())
 }
