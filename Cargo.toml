@@ -3,12 +3,19 @@ name = "phoenix-cli"
 version = "0.1.1"
 edition = "2021"
 
+[[bin]]
+name = "phoenix-cli"
+path = "src/main.rs"
+
+[lib]
+name = "phoenix_cli_processor"
+path = "src/lib/lib.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = "1.0.66"
 clap = { version = "4.0.26", features = ["derive"] }
-lib-sokoban = "0.2.4" 
 shellexpand = "2.1.2"
 solana-sdk = "1.10.32"
 ellipsis-client = "0.1.13"
@@ -24,6 +31,7 @@ spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 spl-associated-token-account = { version = "1.1.1", features = [ "no-entrypoint" ] } 
-phoenix-types = { git = "https://github.com/Ellipsis-Labs/phoenix-types", rev = "ca7ccef" }
-phoenix-sdk = { git = "https://github.com/Ellipsis-Labs/phoenix-sdk", rev = "7f87e01" }
+phoenix-v1 = "0.1.1"
+phoenix-sdk = { git = "https://github.com/Ellipsis-Labs/phoenix-sdk", rev = "9e4e893bcb1af3d0148b20d4da266964fb3591e1" }
 devnet-token-faucet = { git = "https://github.com/Ellipsis-Labs/devnet-token-faucet" }
+bytemuck = "1.13.0"

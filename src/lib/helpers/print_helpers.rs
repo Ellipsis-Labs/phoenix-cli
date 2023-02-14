@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 
 use colored::Colorize;
+use phoenix::program::get_vault_address;
+use phoenix::program::MarketHeader;
+use phoenix::state::{markets::Ladder, Side, TraderState};
 use phoenix_sdk::sdk_client::*;
-use phoenix_types::enums::Side;
-use phoenix_types::instructions::get_vault_address;
-use phoenix_types::market::{Ladder, MarketHeader, TraderState};
 use solana_sdk::program_pack::Pack;
 use solana_sdk::pubkey::Pubkey;
 
@@ -108,7 +108,8 @@ pub async fn print_market_details(
     sdk: &SDKClient,
     market_pubkey: &Pubkey,
     market_metadata: &MarketMetadata,
-    taker_fees: u16,
+    market_header: &MarketHeader,
+    taker_fees: u64,
 ) -> anyhow::Result<()> {
     let base_pubkey = market_metadata.base_mint;
     let quote_pubkey = market_metadata.quote_mint;
@@ -154,6 +155,9 @@ pub async fn print_market_details(
         )
     );
     println!("Taker fees in basis points: {}", taker_fees);
+    println!("Fee destination pubkey: {:?}", market_header.fee_recipient);
+    println!("Successor pubkey: {:?}", market_header.successor);
+    println!("Sequence number: {}", market_header.market_sequence_number);
     Ok(())
 }
 
@@ -170,28 +174,28 @@ pub fn print_trader_state(sdk: &SDKClient, pubkey: &Pubkey, state: &TraderState)
     println!(
         "Base token locked: {}",
         get_decimal_string(
-            sdk.base_lots_to_base_atoms(state.base_lots_locked),
+            sdk.base_lots_to_base_atoms(state.base_lots_locked.into()),
             sdk.base_decimals
         )
     );
     println!(
         "Base token free: {}",
         get_decimal_string(
-            sdk.base_lots_to_base_atoms(state.base_lots_free),
+            sdk.base_lots_to_base_atoms(state.base_lots_free.into()),
             sdk.base_decimals
         )
     );
     println!(
         "Quote token locked: {}",
         get_decimal_string(
-            sdk.quote_lots_to_quote_atoms(state.quote_lots_locked),
+            sdk.quote_lots_to_quote_atoms(state.quote_lots_locked.into()),
             sdk.quote_decimals
         )
     );
     println!(
         "Quote token free: {}",
         get_decimal_string(
-            sdk.quote_lots_to_quote_atoms(state.quote_lots_free),
+            sdk.quote_lots_to_quote_atoms(state.quote_lots_free.into()),
             sdk.quote_decimals
         )
     );

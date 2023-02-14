@@ -1,5 +1,5 @@
+use phoenix::program::instruction_builders::create_request_seat_instruction;
 use phoenix_sdk::sdk_client::*;
-use phoenix_types::instructions::create_request_seat_instruction;
 use solana_sdk::pubkey::Pubkey;
 
 pub async fn process_request_seat(market_pubkey: &Pubkey, sdk: &SDKClient) -> anyhow::Result<()> {

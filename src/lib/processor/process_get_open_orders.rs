@@ -1,8 +1,7 @@
-use borsh::BorshDeserialize;
+use phoenix::program::{load_with_dispatch, MarketHeader};
+use phoenix::quantities::WrapperU64;
+use phoenix::state::Side;
 use phoenix_sdk::sdk_client::*;
-use phoenix_types::dispatch::load_with_dispatch;
-use phoenix_types::enums::Side;
-use phoenix_types::market::MarketHeader;
 use solana_sdk::pubkey::Pubkey;
 use std::mem::size_of;
 
@@ -16,11 +15,12 @@ pub async fn process_get_open_orders(
     // Get market account
     let mut market_account_data = sdk.client.get_account_data(market_pubkey).await?;
     let (header_bytes, market_bytes) = market_account_data.split_at_mut(size_of::<MarketHeader>());
-    let header = MarketHeader::try_from_slice(header_bytes)?;
+    let header: &MarketHeader = bytemuck::try_from_bytes(header_bytes)
+        .map_err(|e| anyhow::anyhow!("Error getting market header. Error: {:?}", e))?;
 
     // Derserialize data and load into correct type
     let market = load_with_dispatch(&header.market_size_params, market_bytes)
-        .ok_or_else(|| anyhow::anyhow!("Failed to load market"))?
+        .map_err(|e| anyhow::anyhow!("Failed to load market. Error {:?}", e))?
         .inner;
 
     let trader_index = market
@@ -47,12 +47,12 @@ pub async fn process_get_open_orders(
                 order_id.price_in_ticks,
                 format!(
                     "{:.1$}",
-                    sdk.ticks_to_float_price(order_id.price_in_ticks),
+                    sdk.ticks_to_float_price(order_id.price_in_ticks.into()),
                     price_precision
                 ),
                 format!(
                     "{:.1$}",
-                    order.num_base_lots as f64 * sdk.base_lots_to_base_units_multiplier(),
+                    order.num_base_lots.as_u64() as f64 * sdk.base_lots_to_base_units_multiplier(),
                     size_precision
                 ),
             ));
@@ -75,12 +75,12 @@ pub async fn process_get_open_orders(
                 order_id.price_in_ticks,
                 format!(
                     "{:.1$}",
-                    sdk.ticks_to_float_price(order_id.price_in_ticks),
+                    sdk.ticks_to_float_price(order_id.price_in_ticks.as_u64()),
                     price_precision
                 ),
                 format!(
                     "{:.1$}",
-                    order.num_base_lots as f64 * sdk.base_lots_to_base_units_multiplier(),
+                    order.num_base_lots.as_u64() as f64 * sdk.base_lots_to_base_units_multiplier(),
                     size_precision,
                 ),
             ));
