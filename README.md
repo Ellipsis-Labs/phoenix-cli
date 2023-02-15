@@ -5,7 +5,11 @@ CLI for interacting with the Phoenix DEX
 
 | Program     | Devnet                                         | 
 | ----------- | ---------------------------------------------- |
-| Phoenix Dex | `phnxNHfGNVjpVVuHkceK3MgwZ1bW25ijfWACKhVFbBH`  |
+| Phoenix Dex | `PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY`  |
+
+| Program     | Mainnet                                        | 
+| ----------- | ---------------------------------------------- |
+| Phoenix Dex | `PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY`  |
 
 ## Installation 
 
