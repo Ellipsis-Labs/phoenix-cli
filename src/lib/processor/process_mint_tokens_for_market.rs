@@ -4,6 +4,8 @@ use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Signer;
 use spl_token::state::Mint;
 
+use crate::helpers::devnet_helpers::devnet_token_faucet;
+
 // Only valid for sandbox devnet markets
 pub async fn process_mint_tokens_for_market(
     sdk: &SDKClient,
@@ -26,13 +28,13 @@ pub async fn process_mint_tokens_for_market(
         .mint_authority
         .ok_or_else(|| anyhow::anyhow!("Base mint authority is not set. Cannot mint tokens"))?;
 
-    if sdk.client.get_account(&quote_mint_authority).await?.owner != devnet_token_faucet::id() {
+    if sdk.client.get_account(&quote_mint_authority).await?.owner != devnet_token_faucet::ID {
         return Err(anyhow::anyhow!(
             "Quote mint authority is not owned by devnet-token-faucet"
         ));
     }
 
-    if sdk.client.get_account(&base_mint_authority).await?.owner != devnet_token_faucet::id() {
+    if sdk.client.get_account(&base_mint_authority).await?.owner != devnet_token_faucet::ID {
         return Err(anyhow::anyhow!(
             "Base mint authority is not owned by devnet-token-faucet"
         ));
