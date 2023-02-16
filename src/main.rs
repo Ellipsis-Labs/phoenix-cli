@@ -69,7 +69,13 @@ async fn main() -> anyhow::Result<()> {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_market(&market_pubkey, &sdk).await?
         }
-        PhoenixCLICommand::GetAllMarkets => process_get_all_markets(&client).await?,
+        PhoenixCLICommand::GetAllMarkets { no_gpa } => {
+            if no_gpa {
+                process_get_all_markets_no_gpa(&client, network_url).await?
+            } else {
+                process_get_all_markets(&client).await?
+            }
+        }
         PhoenixCLICommand::GetTradersForMarket { market_pubkey } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
             process_get_traders_for_market(&market_pubkey, &sdk).await?

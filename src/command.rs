@@ -6,7 +6,10 @@ use solana_sdk::signature::Signature;
 #[derive(Debug, Clone, Parser)]
 pub enum PhoenixCLICommand {
     /// Get summary information on all markets
-    GetAllMarkets,
+    GetAllMarkets {
+        #[clap(short, long, required = false)]
+        no_gpa: bool,
+    },
     /// Get detailed information on a specific market
     GetMarket { market_pubkey: Pubkey },
     /// Get active traders for a given market

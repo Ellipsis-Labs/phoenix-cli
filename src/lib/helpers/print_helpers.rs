@@ -124,6 +124,7 @@ pub async fn print_market_details(
     let quote_vault_acct =
         spl_token::state::Account::unpack(&sdk.client.get_account(&quote_vault).await?.data)?;
     println!("--------------------------------------------");
+    println!("Market: {}", market_pubkey);
     println!("Status: {}", MarketStatus::from(market_header.status));
     println!("Authority: {}", market_header.authority);
     println!("Sequence number: {}", market_header.market_sequence_number);
