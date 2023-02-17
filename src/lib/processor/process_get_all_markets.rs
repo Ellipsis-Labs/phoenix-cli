@@ -4,7 +4,7 @@ use phoenix::program::MarketHeader;
 use phoenix_sdk::sdk_client::SDKClient;
 use serde::{Deserialize, Serialize};
 use solana_sdk::pubkey::Pubkey;
-use std::{fs, mem::size_of, str::FromStr};
+use std::{mem::size_of, str::FromStr};
 
 use crate::helpers::{market_helpers::get_all_markets, print_helpers::print_market_summary_data};
 
@@ -30,7 +30,7 @@ pub async fn process_get_all_markets_no_gpa(
     client: &EllipsisClient,
     network_url: &str,
 ) -> anyhow::Result<()> {
-    let markets = get_markets_from_config()?;
+    let markets = get_market_config().await?;
 
     println!("Found {} market(s)", markets.len());
 
@@ -51,10 +51,20 @@ pub async fn process_get_all_markets_no_gpa(
 #[derive(Serialize, Deserialize)]
 struct MarketStatic {
     market: String,
+    base_ticker: String,
+    quote_ticker: String,
+    base_pubkey: String,
+    quote_pubkey: String,
 }
 
-fn get_markets_from_config() -> anyhow::Result<Vec<MarketStatic>> {
-    let config = fs::read_to_string("mainnet_markets.json")?;
-    let markets: Vec<MarketStatic> = serde_json::from_str(&config)?;
+async fn get_market_config() -> anyhow::Result<Vec<MarketStatic>> {
+    let body = reqwest::get(
+        "https://raw.githubusercontent.com/Ellipsis-Labs/phoenix-sdk/master/mainnet_markets.json",
+    )
+    .await?
+    .text()
+    .await?;
+
+    let markets: Vec<MarketStatic> = serde_json::from_str(&body)?;
     Ok(markets)
 }
