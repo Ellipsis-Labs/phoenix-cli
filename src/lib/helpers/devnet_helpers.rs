@@ -87,7 +87,7 @@ pub mod devnet_token_faucet {
         let mint = get_mint_address(&ticker);
         let mint_authority = get_mint_authority_address(&ticker);
 
-        let destination = spl_associated_token_account::get_associated_token_address(&payer, &mint);
+        let destination = spl_associated_token_account::get_associated_token_address(payer, &mint);
 
         let accounts_vec: Vec<AccountMeta> = vec![
             AccountMeta::new(mint, false),
@@ -118,7 +118,7 @@ pub mod devnet_token_faucet {
         payer: &Pubkey,
         amount: u64,
     ) -> Instruction {
-        let destination = spl_associated_token_account::get_associated_token_address(&payer, &mint);
+        let destination = spl_associated_token_account::get_associated_token_address(payer, mint);
 
         let accounts_vec: Vec<AccountMeta> = vec![
             AccountMeta::new(*mint, false),

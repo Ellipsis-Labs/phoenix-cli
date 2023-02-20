@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 
 use colored::Colorize;
 use phoenix::program::get_vault_address;
+use phoenix::program::status::MarketStatus;
 use phoenix::program::MarketHeader;
 use phoenix::state::{markets::Ladder, Side, TraderState};
 use phoenix_sdk::sdk_client::*;
@@ -122,6 +123,11 @@ pub async fn print_market_details(
 
     let quote_vault_acct =
         spl_token::state::Account::unpack(&sdk.client.get_account(&quote_vault).await?.data)?;
+    println!("--------------------------------------------");
+    println!("Market: {}", market_pubkey);
+    println!("Status: {}", MarketStatus::from(market_header.status));
+    println!("Authority: {}", market_header.authority);
+    println!("Sequence number: {}", market_header.market_sequence_number);
 
     println!(
         "Base Vault balance: {:.3}",
@@ -135,20 +141,23 @@ pub async fn print_market_details(
 
     println!("Base Token: {}", base_pubkey);
     println!("Quote Token: {}", quote_pubkey);
-    println!(
-        "Base Lot Size: {}",
-        get_decimal_string(market_metadata.base_lot_size, market_metadata.base_decimals),
-    );
+
+    println!("Base vault key: {}", market_header.base_params.vault_key);
+    println!("Quote vault key: {}", market_header.quote_params.vault_key);
 
     println!(
-        "Quote Lot Size: {}",
+        "Base Lot Size, in whole units: {}",
+        get_decimal_string(market_metadata.base_lot_size, market_metadata.base_decimals),
+    );
+    println!(
+        "Quote Lot Size, in whole units: {}",
         get_decimal_string(
             market_metadata.quote_lot_size,
             market_metadata.quote_decimals
         )
     );
     println!(
-        "Tick size: {}",
+        "Tick size in quote atoms per base unit: {}",
         get_decimal_string(
             market_metadata.tick_size_in_quote_atoms_per_base_unit,
             market_metadata.quote_decimals
@@ -156,8 +165,12 @@ pub async fn print_market_details(
     );
     println!("Taker fees in basis points: {}", taker_fees);
     println!("Fee destination pubkey: {:?}", market_header.fee_recipient);
+    println!(
+        "Raw base units per base unit: {}",
+        market_metadata.raw_base_units_per_base_unit
+    );
+    println!("Market Size Params: {:?}", market_header.market_size_params);
     println!("Successor pubkey: {:?}", market_header.successor);
-    println!("Sequence number: {}", market_header.market_sequence_number);
     Ok(())
 }
 
