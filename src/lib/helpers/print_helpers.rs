@@ -182,7 +182,6 @@ pub async fn print_market_details(
         market_metadata.raw_base_units_per_base_unit
     );
     println!("Market Size Params: {:?}", market_header.market_size_params);
-    println!("Market authority pubkey: {:?}", market_header.authority);
     println!("Successor pubkey: {:?}", market_header.successor);
 
     println!(
