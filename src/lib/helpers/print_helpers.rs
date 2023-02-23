@@ -1,9 +1,11 @@
 use std::collections::BTreeMap;
+use std::mem::size_of;
 
 use colored::Colorize;
-use phoenix::program::get_vault_address;
 use phoenix::program::status::MarketStatus;
 use phoenix::program::MarketHeader;
+use phoenix::program::{get_vault_address, load_with_dispatch};
+use phoenix::quantities::WrapperU64;
 use phoenix::state::{markets::Ladder, Side, TraderState};
 use phoenix_sdk::sdk_client::*;
 use solana_sdk::program_pack::Pack;
@@ -123,6 +125,16 @@ pub async fn print_market_details(
 
     let quote_vault_acct =
         spl_token::state::Account::unpack(&sdk.client.get_account(&quote_vault).await?.data)?;
+
+    // Get market account
+    let mut market_account_data = sdk.client.get_account_data(market_pubkey).await?;
+    let (header_bytes, market_bytes) = market_account_data.split_at_mut(size_of::<MarketHeader>());
+    let header: &MarketHeader = bytemuck::try_from_bytes(header_bytes)
+        .map_err(|e| anyhow::anyhow!("Error getting market header. Error: {:?}", e))?;
+
+    // Derserialize data and load into correct type
+    let market = load_with_dispatch(&header.market_size_params, market_bytes)?.inner;
+
     println!("--------------------------------------------");
     println!("Market: {}", market_pubkey);
     println!("Status: {}", MarketStatus::from(market_header.status));
@@ -172,6 +184,22 @@ pub async fn print_market_details(
     println!("Market Size Params: {:?}", market_header.market_size_params);
     println!("Market authority pubkey: {:?}", market_header.authority);
     println!("Successor pubkey: {:?}", market_header.successor);
+
+    println!(
+        "Uncollected fees, in quote units: {}",
+        get_decimal_string(
+            sdk.quote_lots_to_quote_atoms(market.get_uncollected_fee_amount().as_u64()),
+            market_metadata.quote_decimals
+        )
+    );
+    println!(
+        "Collected fees, in quote units: {}",
+        get_decimal_string(
+            sdk.quote_lots_to_quote_atoms(market.get_collected_fee_amount().as_u64()),
+            market_metadata.quote_decimals
+        )
+    );
+
     Ok(())
 }
 
