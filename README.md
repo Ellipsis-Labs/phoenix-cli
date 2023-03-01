@@ -60,7 +60,7 @@ Authority: 9odqiJyK4zCMNfPi6AUE6gi9tomqZKPFYcDiokMXYRzS
 ### get-market
 Returns detailed information on a specific market. Information includes market balance's of the base and quote tokens, base and quote token keys, base lot size, quote lot size, tick size, and taker fees in basis points. 
 
-`$ phoenix-cli -u main get-market -m 4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg`
+`$ phoenix-cli -u main get-market 4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg`
 ```
 Market: 4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg
 Status: Active
@@ -165,28 +165,31 @@ Seat status: Approved
 ### get-open-orders
 Returns all open orders on a given market for a trader. By default, returns the payer's open orders. Returns the side, orderID, price in ticks, price, and size for each order. 
 
-`$ phoenix-cli -u main get-open-orders 4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg -t mkrc4jMLEPRoKLUnNL7Ctnwb7uJykbwiYvFjB4sw9Z9`
+`$ phoenix-cli -u main get-open-orders 14CAwu3LiBBk5fcHGdTsFyVxDwvpgFiSfDwgPJxECcE5 -t mkrc4jMLEPRoKLUnNL7Ctnwb7uJykbwiYvFjB4sw9Z9`
 ```
 Open Bids
 ID                   | Price (ticks)        | Price      | Quantity  
-18446744073708399662 | 2385                 | 22.925     | 5.870     
-18446744073708399660 | 2384                 | 22.920     | 15.100    
-18446744073708399658 | 2382                 | 22.910     | 30.226    
-18446744073708399656 | 2380                 | 22.900     | 67.226    
-18446744073708399654 | 2377                 | 22.885     | 111.064   
+18446744073707873235 | 4466                 | 22.330     | 3.134     
+18446744073707873233 | 4465                 | 22.325     | 8.062     
+18446744073707873231 | 4462                 | 22.310     | 16.136    
+18446744073707873237 | 4461                 | 22.305     | 35.866    
+18446744073707873247 | 4457                 | 22.285     | 89.746    
+18446744073707873229 | 4457                 | 22.285     | 59.232    
+18446744073707873245 | 4420                 | 22.100     | 226.244   
 
 Open Asks
 ID                   | Price (ticks)        | Price      | Quantity  
-1151952              | 2387                 | 22.935     | 4.865     
-1151954              | 2388                 | 22.940     | 15.075    
-1151956              | 2390                 | 22.950     | 30.125    
-1151958              | 2392                 | 22.960     | 66.889    
-1151960              | 2395                 | 22.975     | 110.229   
-1151962              | 2399                 | 22.995     | 166.736   
+1678379              | 4468                 | 22.340     | 3.133     
+1678381              | 4469                 | 22.345     | 8.055     
+1678383              | 4470                 | 22.350     | 16.107    
+1678377              | 4473                 | 22.365     | 35.770    
+1678385              | 4475                 | 22.375     | 58.994    
+1678367              | 4483                 | 22.415     | 89.225    
+1678369              | 4520                 | 22.600     | 221.238  
 ```
 
 ### request-seat
-Requests a seat for the payer on the given market. Note that the seat will have to then be approved by the market authority in order to place limit orders. 
+Send a transaction on chain to allocate a seat for the payer on the given market. This will cost ~.0018 SOL for rent. Note that the seat will have to then be approved by the market authority in order to place limit orders. 
 
 `$ phoenix-cli -u main request-seat 4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg`
 ```
@@ -194,16 +197,16 @@ Requested seat, transaction signature: 3Qq7MZQ8XoLeT8fSfeFBTxRy8zFPvCFPbvwU2Zhu1
 ```
 
 ### mint-tokens
-Mints tokens of the ticker_string (example: SOL) to the given pubkey. Default amount is 100_000_000_000. 
+Mints tokens of the ticker_string (example: SOL) to the given pubkey. Default amount is 100_000_000_000. This command is only relevant for tokens associated with the ellipsis token faucet. On mainnet, this will only apply to the BASE/QUOTE market at address `14CAwu3LiBBk5fcHGdTsFyVxDwvpgFiSfDwgPJxECcE5`
 
-`$ phoenix-cli -u main mint-tokens SOL aChXgDyJn7g5BCkjccisGc78LrQZKEmNgt5sz8Tdkzn -a 100000`
+`$ phoenix-cli -u main mint-tokens BASE aChXgDyJn7g5BCkjccisGc78LrQZKEmNgt5sz8Tdkzn -a 100000`
 ```
 Creating ATA
-100000 Tokens minted! Mint pubkey: B1sL3zxwyVnDGzRWCAsBkjL23wyu8HgwQP4XxgnHiSrv,  Recipient address: aChXgDyJn7g5BCkjccisGc78LrQZKEmNgt5sz8Tdkzn
+100000 Tokens minted! Mint pubkey: 7Z6Kczxo8ViRpfnsVvVaATB5fQ8bN2CQpxP8DHfd1vz5,  Recipient address: aChXgDyJn7g5BCkjccisGc78LrQZKEmNgt5sz8Tdkzn
 ```
 
 ### mint-tokens-for-market
-Mints the base and quote tokens of the given market to the given pubkey. Default amounts are 100_000_000_000 for base and 100_000_000 for quote.
+Mints the base and quote tokens of the given market to the given pubkey. Default amounts are 100_000_000_000 for base and 100_000_000 for quote. This command is only relevant for tokens associated with the ellipsis token faucet. On mainnet, this will only apply to the BASE/QUOTE market at address `14CAwu3LiBBk5fcHGdTsFyVxDwvpgFiSfDwgPJxECcE5`
 
 `$ phoenix-cli -u main mint-tokens-for-market 14CAwu3LiBBk5fcHGdTsFyVxDwvpgFiSfDwgPJxECcE5 aChXgDyJn7g5BCkjccisGc78LrQZKEmNgt5sz8Tdkzn`
 ```
