@@ -242,13 +242,15 @@ pub fn print_trader_state(sdk: &SDKClient, pubkey: &Pubkey, state: &TraderState)
     );
 }
 
-pub fn log_market_events(sdk: &SDKClient, market_events: Vec<PhoenixEvent>) {
+pub async fn log_market_events(sdk: &mut SDKClient, market_events: Vec<PhoenixEvent>) {
     for event in market_events {
+        let market_pubkey = event.market;
+        if sdk.active_market_key != market_pubkey {
+            sdk.add_market(&market_pubkey).await.unwrap();
+            sdk.change_active_market(&market_pubkey).unwrap();
+        }
         match event.details {
             MarketEventDetails::Fill(fill) => {
-                if event.market != sdk.active_market_key {
-                    continue;
-                }
                 let Fill {
                     maker,
                     taker,
@@ -271,9 +273,6 @@ pub fn log_market_events(sdk: &SDKClient, market_events: Vec<PhoenixEvent>) {
                 println!("{}", finalize_log(keys, fill_data));
             }
             MarketEventDetails::Place(place) => {
-                if event.market != sdk.active_market_key {
-                    continue;
-                }
                 let Place {
                     order_sequence_number,
                     client_order_id: _,
@@ -297,9 +296,6 @@ pub fn log_market_events(sdk: &SDKClient, market_events: Vec<PhoenixEvent>) {
                 println!("{}", finalize_log(keys, place_data));
             }
             MarketEventDetails::Reduce(reduce) => {
-                if event.market != sdk.active_market_key {
-                    continue;
-                }
                 let Reduce {
                     order_sequence_number,
                     maker,

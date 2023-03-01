@@ -7,6 +7,8 @@ use solana_sdk::signature::Signature;
 pub enum PhoenixCLICommand {
     /// Get summary information on all markets
     GetAllMarkets {
+        /// Optionally skip the GetProgramAccounts network call. This will read a static list of markets in the config file instead.
+        /// Only for mainnet and highly recommended for mainnet
         #[clap(short, long, required = false)]
         no_gpa: bool,
     },
@@ -27,7 +29,6 @@ pub enum PhoenixCLICommand {
     GetFullBook { market_pubkey: Pubkey },
     /// Get the market events that occured in a given transaction signature
     GetTransaction {
-        market_pubkey: Pubkey,
         signature: Signature,
     },
     /// Get the current status of a market
@@ -46,9 +47,11 @@ pub enum PhoenixCLICommand {
         #[clap(short, long, required = false)]
         trader_pubkey: Option<Pubkey>,
     },
-    /// Request a seat for the current payer for a given market. Note that the seat will have to then be approved by the market authority.
+    /// Send a transaction on chain to allocate a seat for the payer on the given market. This will cost ~.0018 SOL for rent. 
+    /// Note that the seat will have to then be approved by the market authority.
     RequestSeat { market_pubkey: Pubkey },
     /// Mint tokens to a recipient for a given ticker string (for example SOL or USDC). Default amount is 100_000_000_000.
+    /// This is only for markets associated with the ellipsis token faucet. 
     MintTokens {
         /// Ticker string, example: SOL
         mint_ticker: String,
@@ -59,6 +62,7 @@ pub enum PhoenixCLICommand {
         amount: u64,
     },
     /// Mint both base and quote tokens to a recipient for a given market. Default amounts are 100_000_000_000 for base and 100_000_000 for quote.
+    /// This is only for markets associated with the ellipsis token faucet. 
     MintTokensForMarket {
         market_pubkey: Pubkey,
         /// Pubkey of the recipient of the tokens

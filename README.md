@@ -40,7 +40,7 @@ Optionally include the following parameters when running the cli:
 
 
 ### get-all-markets
-Returns summary information on all markets that exist on Phoenix. Summary information includes market key, base and quote token keys, and authority key.
+Returns summary information on all markets that exist on Phoenix. Summary information includes market key, base and quote token keys, and authority key. Highly recommended to use the no-gpa flag for mainnet. 
 
 `$ phoenix-cli -u main get-all-markets --no-gpa`
 ```
@@ -90,6 +90,12 @@ Returns all trader keys that have an approved seat on a given market.
 `$ phoenix-cli -u main get-traders-for-market 4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg`
 ```
 Found 3 trader(s). Printing traders with locked or free lots
+--------------------------------
+Trader pubkey: 3HBWHuyxWv4uN8U8SeukocrWPfLZJqrtj9DgDHsGo2HR
+Base token locked: 116.873
+Base token free: 6.666
+Quote token locked: 2647.022716
+Quote token free: 1222.250847
 ```
 
 ### get-top-of-book
@@ -138,11 +144,14 @@ Returns the full orderbook for a given market.
 ```
 
 ### get-transaction
-Returns a summary of the market events that occured (Place, Fill, Reduce/Cancel) in a given transaction signature for the given market. 
+Returns a summary of the market events that occured (Place, Fill, Reduce/Cancel) in a given transaction signature.
 
-`$ phoenix-cli -u main get-transaction 4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg 4gw6UDWsDCWrh2eqYxvVzbVyywfPVo24V2qMTSVGJJAdxvv9Tx4pBrqE1cLTgomP2QkZ7wigbjoN3GpibhJY8PFV`
+`$ phoenix-cli -u main get-transaction 4gw6UDWsDCWrh2eqYxvVzbVyywfPVo24V2qMTSVGJJAdxvv9Tx4pBrqE1cLTgomP2QkZ7wigbjoN3GpibhJY8PFV`
 ```
-
+market: 4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg, event_type: Fill, timestamp: 1677629539, signature: 4gw6UDWsDCWrh2eqYxvVzbVyywfPVo24V2qMTSVGJJAdxvv9Tx4pBrqE1cLTgomP2QkZ7wigbjoN3GpibhJY8PFV, slot: 180067446, sequence_number: 680904, event_index: 0, maker: 3HBWHuyxWv4uN8U8SeukocrWPfLZJqrtj9DgDHsGo2HR, taker: CcoiNhaTR88CSkEdsdeJpEMWnfCNqMf4HGGzXjwnvZF, price: 21.815, side: Bid, quantity: 2.288
+market: 4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg, event_type: Fill, timestamp: 1677629539, signature: 4gw6UDWsDCWrh2eqYxvVzbVyywfPVo24V2qMTSVGJJAdxvv9Tx4pBrqE1cLTgomP2QkZ7wigbjoN3GpibhJY8PFV, slot: 180067446, sequence_number: 680904, event_index: 1, maker: 3HBWHuyxWv4uN8U8SeukocrWPfLZJqrtj9DgDHsGo2HR, taker: CcoiNhaTR88CSkEdsdeJpEMWnfCNqMf4HGGzXjwnvZF, price: 21.811, side: Bid, quantity: 27.459
+market: 4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg, event_type: Fill, timestamp: 1677629539, signature: 4gw6UDWsDCWrh2eqYxvVzbVyywfPVo24V2qMTSVGJJAdxvv9Tx4pBrqE1cLTgomP2QkZ7wigbjoN3GpibhJY8PFV, slot: 180067446, sequence_number: 680904, event_index: 2, maker: 3HBWHuyxWv4uN8U8SeukocrWPfLZJqrtj9DgDHsGo2HR, taker: CcoiNhaTR88CSkEdsdeJpEMWnfCNqMf4HGGzXjwnvZF, price: 21.806, side: Bid, quantity: 17.066
+Total quote token fees paid: 0.204193
 ```
 
 ### get-market-status
