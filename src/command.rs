@@ -34,7 +34,6 @@ pub enum PhoenixCLICommand {
     GetMarketStatus { market_pubkey: Pubkey },
     /// Get the status and address of a seat for a given market and trader
     GetSeatInfo {
-        #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
         /// Pubkey of the trader associated with the seat. Defaults to the current payer
         #[clap(short, long, required = false)]
@@ -42,7 +41,6 @@ pub enum PhoenixCLICommand {
     },
     /// Get all open orders on a given market for a trader
     GetOpenOrders {
-        #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
         /// Pubkey of the trader for whom to get open orders. Defaults to the current payer
         #[clap(short, long, required = false)]
@@ -51,7 +49,6 @@ pub enum PhoenixCLICommand {
     /// Request a seat for the current payer for a given market. Note that the seat will have to then be approved by the market authority.
     RequestSeat { market_pubkey: Pubkey },
     /// Mint tokens to a recipient for a given ticker string (for example SOL or USDC). Default amount is 100_000_000_000.
-    /// Devnet only
     MintTokens {
         /// Ticker string, example: SOL
         #[clap(short, long, required = true)]
@@ -63,9 +60,7 @@ pub enum PhoenixCLICommand {
         amount: u64,
     },
     /// Mint both base and quote tokens to a recipient for a given market. Default amounts are 100_000_000_000 for base and 100_000_000 for quote.
-    /// Devnet only
     MintTokensForMarket {
-        #[clap(short, long, required = true)]
         market_pubkey: Pubkey,
         #[clap(short, long, required = true)]
         recipient_pubkey: Pubkey,
