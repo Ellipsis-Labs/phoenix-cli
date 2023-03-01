@@ -165,7 +165,7 @@ Market status: Active
 ### get-seat-info
 Returns the status and address of a trader's seat. By default, returns the payer's seat info. Seats can be in the following states: Approved, NotApproved, Retired
 
-`$ phoenix-cli -u main get-seat-info -m 4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg -t 3HBWHuyxWv4uN8U8SeukocrWPfLZJqrtj9DgDHsGo2HR`
+`$ phoenix-cli -u main get-seat-info 4DoNfFBfF7UokCC2FQzriy7yHK6DY6NVdYpuekQ5pRgg -t 3HBWHuyxWv4uN8U8SeukocrWPfLZJqrtj9DgDHsGo2HR`
 ```
 Seat address: GGyZqgoqnKsvMTsmSSkTrDjtdSFUsEoioKz9Yr2vEnZa
 Seat status: Approved
