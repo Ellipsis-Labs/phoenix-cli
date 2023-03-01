@@ -101,7 +101,12 @@ async fn main() -> anyhow::Result<()> {
         PhoenixCLICommand::GetTransaction {
             signature,
         } => {
-            let dummy_market_pubkey = Pubkey::from_str("14CAwu3LiBBk5fcHGdTsFyVxDwvpgFiSfDwgPJxECcE5").unwrap();
+            let mut dummy_market_pubkey = Pubkey::from_str("14CAwu3LiBBk5fcHGdTsFyVxDwvpgFiSfDwgPJxECcE5").unwrap();
+            let rpc_client = RpcClient::new(network_url.to_string());
+            let acc = rpc_client.get_account(&dummy_market_pubkey).await;
+            if acc.is_err() {
+                dummy_market_pubkey = Pubkey::from_str("7EBrdSbDLvAJEMjigvSrBGkuRNdH9whvzkeojsHSVQib").unwrap(); 
+            }
             let mut sdk = SDKClient::new(&dummy_market_pubkey, &payer, network_url).await;
             process_get_transaction(&signature, &mut sdk).await?
         }
