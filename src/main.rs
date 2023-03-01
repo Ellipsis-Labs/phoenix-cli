@@ -1,4 +1,6 @@
 mod command;
+use std::str::FromStr;
+
 use crate::command::PhoenixCLICommand;
 use anyhow::anyhow;
 use clap::Parser;
@@ -13,6 +15,7 @@ use phoenix_cli_processor::processor::{
 use phoenix_sdk::sdk_client::*;
 use solana_cli_config::{Config, ConfigInput, CONFIG_FILE};
 use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signer::keypair::{read_keypair_file, Keypair};
 use solana_sdk::signer::Signer;
 
@@ -96,11 +99,11 @@ async fn main() -> anyhow::Result<()> {
             process_get_full_book(&market_pubkey, &sdk).await?
         }
         PhoenixCLICommand::GetTransaction {
-            market_pubkey,
             signature,
         } => {
-            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
-            process_get_transaction(&signature, &sdk).await?
+            let dummy_market_pubkey = Pubkey::from_str("14CAwu3LiBBk5fcHGdTsFyVxDwvpgFiSfDwgPJxECcE5").unwrap();
+            let mut sdk = SDKClient::new(&dummy_market_pubkey, &payer, network_url).await;
+            process_get_transaction(&signature, &mut sdk).await?
         }
         PhoenixCLICommand::GetMarketStatus { market_pubkey } => {
             let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
