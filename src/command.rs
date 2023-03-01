@@ -51,9 +51,8 @@ pub enum PhoenixCLICommand {
     /// Mint tokens to a recipient for a given ticker string (for example SOL or USDC). Default amount is 100_000_000_000.
     MintTokens {
         /// Ticker string, example: SOL
-        #[clap(short, long, required = true)]
         mint_ticker: String,
-        #[clap(short, long, required = true)]
+        /// Pubkey of the recipient of the tokens
         recipient_pubkey: Pubkey,
         /// Amount in atoms (1 * 10*(-decimals))
         #[clap(short, long, required = false, default_value = "100000000000")]
@@ -62,7 +61,7 @@ pub enum PhoenixCLICommand {
     /// Mint both base and quote tokens to a recipient for a given market. Default amounts are 100_000_000_000 for base and 100_000_000 for quote.
     MintTokensForMarket {
         market_pubkey: Pubkey,
-        #[clap(short, long, required = true)]
+        /// Pubkey of the recipient of the tokens
         recipient_pubkey: Pubkey,
         /// Amount in atoms (1 * 10*(-decimals))
         #[clap(short, long, required = false, default_value = "100000000000")]

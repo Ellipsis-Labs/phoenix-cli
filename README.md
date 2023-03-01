@@ -196,7 +196,7 @@ Requested seat, transaction signature: 3Qq7MZQ8XoLeT8fSfeFBTxRy8zFPvCFPbvwU2Zhu1
 ### mint-tokens
 Mints tokens of the ticker_string (example: SOL) to the given pubkey. Default amount is 100_000_000_000. 
 
-`$ phoenix-cli -u main mint-tokens -m SOL -a 100000 -r aChXgDyJn7g5BCkjccisGc78LrQZKEmNgt5sz8Tdkzn`
+`$ phoenix-cli -u main mint-tokens SOL aChXgDyJn7g5BCkjccisGc78LrQZKEmNgt5sz8Tdkzn -a 100000`
 ```
 Creating ATA
 100000 Tokens minted! Mint pubkey: B1sL3zxwyVnDGzRWCAsBkjL23wyu8HgwQP4XxgnHiSrv,  Recipient address: aChXgDyJn7g5BCkjccisGc78LrQZKEmNgt5sz8Tdkzn
@@ -205,7 +205,7 @@ Creating ATA
 ### mint-tokens-for-market
 Mints the base and quote tokens of the given market to the given pubkey. Default amounts are 100_000_000_000 for base and 100_000_000 for quote.
 
-`$ phoenix-cli -u main mint-tokens-for-market 14CAwu3LiBBk5fcHGdTsFyVxDwvpgFiSfDwgPJxECcE5 -r aChXgDyJn7g5BCkjccisGc78LrQZKEmNgt5sz8Tdkzn`
+`$ phoenix-cli -u main mint-tokens-for-market 14CAwu3LiBBk5fcHGdTsFyVxDwvpgFiSfDwgPJxECcE5 aChXgDyJn7g5BCkjccisGc78LrQZKEmNgt5sz8Tdkzn`
 ```
 Creating ATA for base token
 Creating ATA for quote token
