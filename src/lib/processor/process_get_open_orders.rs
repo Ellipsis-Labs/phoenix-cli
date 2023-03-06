@@ -26,7 +26,7 @@ pub async fn process_get_open_orders(
     let trader_index = market
         .get_trader_index(trader_pubkey)
         .ok_or_else(|| anyhow::anyhow!("Trader not found"))?;
-
+    println!("Trader Index: {}", trader_index);
     let book_bids = market.get_book(Side::Bid);
     let book_asks = market.get_book(Side::Ask);
     let price_precision: usize =
@@ -43,7 +43,7 @@ pub async fn process_get_open_orders(
         if order.trader_index as u32 == trader_index {
             open_bids.push(format!(
                 "{0: <20} | {1: <20} | {2: <10} | {3: <10}",
-                order_id.order_sequence_number,
+                order_id.order_sequence_number as i64,
                 order_id.price_in_ticks,
                 format!(
                     "{:.1$}",
@@ -71,7 +71,7 @@ pub async fn process_get_open_orders(
         if order.trader_index as u32 == trader_index {
             open_asks.push(format!(
                 "{0: <20} | {1: <20} | {2: <10} | {3: <10}",
-                order_id.order_sequence_number,
+                order_id.order_sequence_number as i64,
                 order_id.price_in_ticks,
                 format!(
                     "{:.1$}",
