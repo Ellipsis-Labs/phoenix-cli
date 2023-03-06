@@ -26,7 +26,6 @@ pub async fn process_get_open_orders(
     let trader_index = market
         .get_trader_index(trader_pubkey)
         .ok_or_else(|| anyhow::anyhow!("Trader not found"))?;
-    println!("Trader Index: {}", trader_index);
     let book_bids = market.get_book(Side::Bid);
     let book_asks = market.get_book(Side::Ask);
     let price_precision: usize =
