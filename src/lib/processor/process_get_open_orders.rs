@@ -1,6 +1,6 @@
 use phoenix::program::{load_with_dispatch, MarketHeader};
 use phoenix::quantities::WrapperU64;
-use phoenix::state::markets::RestingOrder;
+use phoenix::state::markets::{FIFOOrderId, FIFORestingOrder, RestingOrder};
 use phoenix::state::Side;
 use phoenix_sdk::sdk_client::*;
 use solana_sdk::clock::Clock;
@@ -33,7 +33,7 @@ pub async fn process_get_open_orders(
 
     let clock_account_data = market_and_clock
         .remove(0)
-        .ok_or(anyhow::Error::msg("Market account not found"))?
+        .ok_or(anyhow::Error::msg("Clock account not found"))?
         .data;
 
     let clock: Clock = bincode::deserialize(&clock_account_data)
@@ -66,38 +66,13 @@ pub async fn process_get_open_orders(
             if order.is_expired(clock.slot, clock.unix_timestamp as u64) {
                 continue;
             }
-            open_bids.push(format!(
-                "{0: <20} | {1: <20} | {2: <10} | {3: <10} | {4: <15} | {5: <15} ",
-                order_id.order_sequence_number as i64,
-                order_id.price_in_ticks,
-                format!(
-                    "{:.1$}",
-                    sdk.ticks_to_float_price(order_id.price_in_ticks.into()),
-                    price_precision
-                ),
-                format!(
-                    "{:.1$}",
-                    order.num_base_lots.as_u64() as f64 * sdk.base_lots_to_base_units_multiplier(),
-                    size_precision
-                ),
-                format!(
-                    "{}",
-                    if order.last_valid_slot >= clock.slot {
-                        (1 + order.last_valid_slot - clock.slot).to_string()
-                    } else {
-                        "∞".to_string()
-                    }
-                ),
-                format!(
-                    "{}",
-                    if order.last_valid_unix_timestamp_in_seconds >= clock.unix_timestamp as u64 {
-                        (1 + order.last_valid_unix_timestamp_in_seconds
-                            - clock.unix_timestamp as u64)
-                            .to_string()
-                    } else {
-                        "∞".to_string()
-                    }
-                )
+            open_bids.push(format_open_orders(
+                sdk,
+                order_id,
+                order,
+                price_precision,
+                size_precision,
+                &clock,
             ));
         }
     }
@@ -115,42 +90,53 @@ pub async fn process_get_open_orders(
             if order.is_expired(clock.slot, clock.unix_timestamp as u64) {
                 continue;
             }
-            open_asks.push(format!(
-                "{0: <20} | {1: <20} | {2: <10} | {3: <10} | {4: <15} | {5: <15} ",
-                order_id.order_sequence_number as i64,
-                order_id.price_in_ticks,
-                format!(
-                    "{:.1$}",
-                    sdk.ticks_to_float_price(order_id.price_in_ticks.as_u64()),
-                    price_precision
-                ),
-                format!(
-                    "{:.1$}",
-                    order.num_base_lots.as_u64() as f64 * sdk.base_lots_to_base_units_multiplier(),
-                    size_precision,
-                ),
-                format!(
-                    "{}",
-                    if order.last_valid_slot >= clock.slot {
-                        (1 + order.last_valid_slot - clock.slot).to_string()
-                    } else {
-                        "∞".to_string()
-                    }
-                ),
-                format!(
-                    "{}",
-                    if order.last_valid_unix_timestamp_in_seconds >= clock.unix_timestamp as u64 {
-                        (1 + order.last_valid_unix_timestamp_in_seconds
-                            - clock.unix_timestamp as u64)
-                            .to_string()
-                    } else {
-                        "∞".to_string()
-                    }
-                )
+            open_asks.push(format_open_orders(
+                sdk,
+                order_id,
+                order,
+                price_precision,
+                size_precision,
+                &clock,
             ));
         }
     }
     open_asks.iter().for_each(|line| println!("{}", line));
 
     Ok(())
+}
+
+fn format_open_orders(
+    sdk: &SDKClient,
+    order_id: &FIFOOrderId,
+    order: &FIFORestingOrder,
+    price_precision: usize,
+    size_precision: usize,
+    clock: &Clock,
+) -> String {
+    format!(
+        "{0: <20} | {1: <20} | {2: <10} | {3: <10} | {4: <15} | {5: <15} ",
+        order_id.order_sequence_number as i64,
+        order_id.price_in_ticks,
+        format!(
+            "{:.1$}",
+            sdk.ticks_to_float_price(order_id.price_in_ticks.as_u64()),
+            price_precision
+        ),
+        format!(
+            "{:.1$}",
+            order.num_base_lots.as_u64() as f64 * sdk.base_lots_to_base_units_multiplier(),
+            size_precision,
+        ),
+        if order.last_valid_slot >= clock.slot {
+            (1 + order.last_valid_slot - clock.slot).to_string()
+        } else {
+            "∞".to_string()
+        },
+        if order.last_valid_unix_timestamp_in_seconds >= clock.unix_timestamp as u64 {
+            (1 + order.last_valid_unix_timestamp_in_seconds - clock.unix_timestamp as u64)
+                .to_string()
+        } else {
+            "∞".to_string()
+        }
+    )
 }
