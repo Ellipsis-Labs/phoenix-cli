@@ -12,9 +12,11 @@ use solana_account_decoder::UiAccountEncoding;
 use solana_client::rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig};
 use solana_client::rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType};
 use solana_sdk::account::Account;
+use solana_sdk::clock::Clock;
 use solana_sdk::commitment_config::CommitmentConfig;
 use solana_sdk::keccak;
 use solana_sdk::pubkey::Pubkey;
+use solana_sdk::sysvar;
 use std::collections::BTreeMap;
 use std::mem::size_of;
 
@@ -115,15 +117,39 @@ pub async fn get_book_levels(
     levels: u64,
 ) -> anyhow::Result<Ladder> {
     // Get market account
-    let mut market_account_data = client.get_account_data(market_pubkey).await?;
-    let (header_bytes, market_bytes) = market_account_data.split_at_mut(size_of::<MarketHeader>());
+    let mut market_and_clock = client
+        .get_multiple_accounts_with_commitment(
+            &[*market_pubkey, sysvar::clock::id()],
+            CommitmentConfig::confirmed(),
+        )
+        .await?
+        .value;
+
+    let market_account_data = market_and_clock
+        .remove(0)
+        .ok_or(anyhow::Error::msg("Market account not found"))?
+        .data;
+
+    let clock_account_data = market_and_clock
+        .remove(0)
+        .ok_or(anyhow::Error::msg("Clock account not found"))?
+        .data;
+
+    let clock: Clock = bincode::deserialize(&clock_account_data)
+        .map_err(|_| anyhow::Error::msg("Error deserializing clock"))?;
+
+    let (header_bytes, market_bytes) = market_account_data.split_at(size_of::<MarketHeader>());
     let header: &MarketHeader = bytemuck::try_from_bytes(header_bytes)
         .map_err(|e| anyhow::anyhow!("Error getting market header. Error: {:?}", e))?;
 
     // Derserialize data and load into correct type
     let market = load_with_dispatch(&header.market_size_params, market_bytes)?.inner;
 
-    Ok(market.get_ladder(levels))
+    Ok(market.get_ladder_with_expiration(
+        levels,
+        Some(clock.slot),
+        Some(clock.unix_timestamp as u64),
+    ))
 }
 
 pub async fn get_all_approved_seats_for_market(
