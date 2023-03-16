@@ -40,7 +40,7 @@ Optionally include the following parameters when running the cli:
 
 
 ### get-all-markets
-Returns summary information on all markets that exist on Phoenix. Summary information includes market key, base and quote token keys, and authority key. Highly recommended to use the no-gpa flag for mainnet. 
+Returns summary information on all markets that exist on Phoenix. Summary information includes market key, base and quote token keys, and authority key. Recommended to use the no-gpa flag to read from a static config file and avoiding making an expensive network call.
 
 `$ phoenix-cli -u main get-all-markets --no-gpa`
 ```
