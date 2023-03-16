@@ -7,8 +7,8 @@ use solana_sdk::signature::Signature;
 pub enum PhoenixCLICommand {
     /// Get summary information on all markets
     GetAllMarkets {
-        /// Optionally skip the GetProgramAccounts network call. This will read a static list of markets in the config file instead.
-        /// Only for mainnet and highly recommended for mainnet
+        /// Optionally skip the GetProgramAccounts network call. This will read a static list of markets in a config file instead.
+        /// Highly recommended to use this flag as GetProgramAccounts is an expensive call.
         #[clap(short, long, required = false)]
         no_gpa: bool,
     },
