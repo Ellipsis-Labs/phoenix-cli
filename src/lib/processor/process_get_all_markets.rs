@@ -5,7 +5,7 @@ use phoenix_sdk::sdk_client::SDKClient;
 use serde::{Deserialize, Serialize};
 use solana_sdk::pubkey::Pubkey;
 use std::{mem::size_of, str::FromStr};
-
+use std::collections::HashMap;
 use crate::helpers::{market_helpers::get_all_markets, print_helpers::print_market_summary_data};
 
 pub async fn process_get_all_markets(client: &EllipsisClient) -> anyhow::Result<()> {
@@ -30,12 +30,12 @@ pub async fn process_get_all_markets_no_gpa(
     client: &EllipsisClient,
     network_url: &str,
 ) -> anyhow::Result<()> {
-    let markets = get_market_config().await?;
+    let markets = get_market_config(client).await?.markets;
 
     println!("Found {} market(s)", markets.len());
 
     for market in markets {
-        let market_pubkey = Pubkey::from_str(&market.market)?;
+        let market_pubkey = Pubkey::from_str(&market)?;
         let sdk = SDKClient::new(&market_pubkey, &client.payer, network_url).await;
 
         let market_account_data = sdk.client.get_account_data(&market_pubkey).await?;
@@ -48,23 +48,29 @@ pub async fn process_get_all_markets_no_gpa(
     Ok(())
 }
 
-#[derive(Serialize, Deserialize)]
-struct MarketStatic {
-    market: String,
-    base_ticker: String,
-    quote_ticker: String,
-    base_pubkey: String,
-    quote_pubkey: String,
+#[derive(Serialize, Deserialize, Clone)]
+pub struct JsonMarketConfig {
+    pub markets: Vec<String>,
 }
 
-async fn get_market_config() -> anyhow::Result<Vec<MarketStatic>> {
+async fn get_market_config(client: &EllipsisClient) -> anyhow::Result<JsonMarketConfig> {
+    let genesis = client.get_genesis_hash().await?;
+
+    //hardcoded in the genesis hashes for mainnet and devnet
+    let cluster = match genesis.to_string().as_str() {
+        "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d" => "mainnet-beta",
+        "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG" => "devnet",
+        _ => "localhost",
+    };
+
     let body = reqwest::get(
-        "https://raw.githubusercontent.com/Ellipsis-Labs/phoenix-sdk/master/mainnet_markets.json",
+        "https://raw.githubusercontent.com/Ellipsis-Labs/phoenix-sdk/master/markets.json",
     )
     .await?
     .text()
     .await?;
 
-    let markets: Vec<MarketStatic> = serde_json::from_str(&body)?;
-    Ok(markets)
+    let markets: HashMap<String, JsonMarketConfig> = serde_json::from_str(&body)?;
+
+    Ok(markets.get(cluster).ok_or(anyhow!("No markets found for cluster"))?.clone())
 }
