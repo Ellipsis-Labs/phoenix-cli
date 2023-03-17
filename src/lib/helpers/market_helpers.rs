@@ -154,6 +154,7 @@ pub async fn get_book_levels(
 
 pub async fn get_all_approved_seats_for_market(
     sdk: &SDKClient,
+    market: &Pubkey,
 ) -> anyhow::Result<Vec<(Pubkey, Account)>> {
     // Get discriminant for seat account
     let seat_account_discriminant = get_discriminant("phoenix::program::accounts::Seat")?;
@@ -163,7 +164,7 @@ pub async fn get_all_approved_seats_for_market(
         0,
         [
             seat_account_discriminant.to_le_bytes().to_vec(),
-            sdk.active_market_key.to_bytes().to_vec(),
+            market.to_bytes().to_vec(),
         ]
         .concat(),
     ));

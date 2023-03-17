@@ -11,23 +11,25 @@ use phoenix_sdk::sdk_client::*;
 use solana_sdk::program_pack::Pack;
 use solana_sdk::pubkey::Pubkey;
 
-pub fn print_book(sdk: &SDKClient, book: &Ladder) {
-    let asks = book.asks.iter().map(|lvl| {
-        (
-            sdk.ticks_to_float_price(lvl.price_in_ticks),
-            lvl.size_in_base_lots as f64 * sdk.base_lots_to_base_units_multiplier(),
-        )
+pub fn print_book(sdk: &SDKClient, market: &Pubkey, book: &Ladder) -> anyhow::Result<()> {
+    let meta = sdk.get_market_metadata(market);
+    let asks = book.asks.iter().filter_map(|lvl| {
+        Some((
+            sdk.ticks_to_float_price(market, lvl.price_in_ticks).ok()?,
+            lvl.size_in_base_lots as f64 * sdk.base_lots_to_base_units_multiplier(market).ok()?,
+        ))
     });
 
-    let bids = book.bids.iter().map(|lvl| {
-        (
-            sdk.ticks_to_float_price(lvl.price_in_ticks),
-            lvl.size_in_base_lots as f64 * sdk.base_lots_to_base_units_multiplier(),
-        )
+    let bids = book.bids.iter().filter_map(|lvl| {
+        Some((
+            sdk.ticks_to_float_price(market, lvl.price_in_ticks).ok()?,
+            lvl.size_in_base_lots as f64 * sdk.base_lots_to_base_units_multiplier(market).ok()?,
+        ))
     });
-    let price_precision: usize =
-        get_precision(10_u64.pow(sdk.quote_decimals) / sdk.tick_size_in_quote_atoms_per_base_unit);
-    let size_precision: usize = get_precision(sdk.num_base_lots_per_base_unit);
+    let price_precision: usize = get_precision(
+        10_u64.pow(meta.quote_decimals) / meta.tick_size_in_quote_atoms_per_base_unit,
+    );
+    let size_precision: usize = get_precision(meta.num_base_lots_per_base_unit);
     let bid_strings = bids
         .into_iter()
         .map(|(price, size)| {
@@ -72,6 +74,7 @@ pub fn print_book(sdk: &SDKClient, book: &Ladder) {
         );
         println!("{}", str);
     }
+    Ok(())
 }
 
 pub fn get_precision(mut target: u64) -> usize {
@@ -117,6 +120,8 @@ pub async fn print_market_details(
     let base_pubkey = market_metadata.base_mint;
     let quote_pubkey = market_metadata.quote_mint;
 
+    let meta = sdk.get_market_metadata(market_pubkey);
+
     let base_vault = get_vault_address(market_pubkey, &base_pubkey).0;
     let quote_vault = get_vault_address(market_pubkey, &quote_pubkey).0;
 
@@ -143,12 +148,12 @@ pub async fn print_market_details(
 
     println!(
         "Base Vault balance: {:.3}",
-        get_decimal_string(base_vault_acct.amount, sdk.base_decimals).parse::<f64>()?
+        get_decimal_string(base_vault_acct.amount, meta.base_decimals).parse::<f64>()?
     );
 
     println!(
         "Quote Vault balance: {:.3}",
-        get_decimal_string(quote_vault_acct.amount, sdk.quote_decimals).parse::<f64>()?
+        get_decimal_string(quote_vault_acct.amount, meta.quote_decimals).parse::<f64>()?
     );
 
     println!("Base Token: {}", base_pubkey);
@@ -187,14 +192,20 @@ pub async fn print_market_details(
     println!(
         "Uncollected fees, in quote units: {}",
         get_decimal_string(
-            sdk.quote_lots_to_quote_atoms(market.get_uncollected_fee_amount().as_u64()),
+            sdk.quote_lots_to_quote_atoms(
+                market_pubkey,
+                market.get_uncollected_fee_amount().as_u64()
+            )?,
             market_metadata.quote_decimals
         )
     );
     println!(
         "Collected fees, in quote units: {}",
         get_decimal_string(
-            sdk.quote_lots_to_quote_atoms(market.get_collected_fee_amount().as_u64()),
+            sdk.quote_lots_to_quote_atoms(
+                market_pubkey,
+                market.get_collected_fee_amount().as_u64()
+            )?,
             market_metadata.quote_decimals
         )
     );
@@ -202,53 +213,63 @@ pub async fn print_market_details(
     Ok(())
 }
 
-pub fn print_trader_state(sdk: &SDKClient, pubkey: &Pubkey, state: &TraderState) {
+pub fn print_trader_state(
+    sdk: &SDKClient,
+    market_pubkey: &Pubkey,
+    pubkey: &Pubkey,
+    state: &TraderState,
+) -> anyhow::Result<()> {
+    let meta = sdk.get_market_metadata(market_pubkey);
     if state.base_lots_locked == 0
         && state.base_lots_free == 0
         && state.quote_lots_locked == 0
         && state.quote_lots_free == 0
     {
-        return;
+        return Ok(());
     }
     println!("--------------------------------");
     println!("Trader pubkey: {:?}", pubkey);
     println!(
         "Base token locked: {}",
         get_decimal_string(
-            sdk.base_lots_to_base_atoms(state.base_lots_locked.into()),
-            sdk.base_decimals
+            sdk.base_lots_to_base_atoms(market_pubkey, state.base_lots_locked.into())?,
+            meta.base_decimals
         )
     );
     println!(
         "Base token free: {}",
         get_decimal_string(
-            sdk.base_lots_to_base_atoms(state.base_lots_free.into()),
-            sdk.base_decimals
+            sdk.base_lots_to_base_atoms(market_pubkey, state.base_lots_free.into())?,
+            meta.base_decimals
         )
     );
     println!(
         "Quote token locked: {}",
         get_decimal_string(
-            sdk.quote_lots_to_quote_atoms(state.quote_lots_locked.into()),
-            sdk.quote_decimals
+            sdk.quote_lots_to_quote_atoms(market_pubkey, state.quote_lots_locked.into())?,
+            meta.quote_decimals
         )
     );
     println!(
         "Quote token free: {}",
         get_decimal_string(
-            sdk.quote_lots_to_quote_atoms(state.quote_lots_free.into()),
-            sdk.quote_decimals
+            sdk.quote_lots_to_quote_atoms(market_pubkey, state.quote_lots_free.into())?,
+            meta.quote_decimals
         )
     );
+    Ok(())
 }
 
-pub async fn log_market_events(sdk: &mut SDKClient, market_events: Vec<PhoenixEvent>) {
+pub async fn log_market_events(
+    sdk: &mut SDKClient,
+    market_events: Vec<PhoenixEvent>,
+) -> anyhow::Result<()> {
     for event in market_events {
         let market_pubkey = event.market;
-        if sdk.active_market_key != market_pubkey {
-            sdk.add_market(&market_pubkey).await.unwrap();
-            sdk.change_active_market(&market_pubkey).unwrap();
+        if !sdk.markets.contains_key(&market_pubkey) {
+            sdk.add_market(&market_pubkey).await?;
         }
+        let metadata = sdk.get_market_metadata(&market_pubkey);
         match event.details {
             MarketEventDetails::Fill(fill) => {
                 let Fill {
@@ -263,11 +284,11 @@ pub async fn log_market_events(sdk: &mut SDKClient, market_events: Vec<PhoenixEv
                 let fill_data = vec![
                     maker.to_string(),
                     taker.to_string(),
-                    (sdk.ticks_to_float_price(price_in_ticks)).to_string(),
+                    (sdk.ticks_to_float_price(&market_pubkey, price_in_ticks))?.to_string(),
                     format!("{:?}", side_filled),
                     get_decimal_string(
-                        sdk.base_lots_to_base_atoms(base_lots_filled),
-                        sdk.base_decimals,
+                        sdk.base_lots_to_base_atoms(&market_pubkey, base_lots_filled)?,
+                        metadata.base_decimals,
                     ),
                 ];
                 println!("{}", finalize_log(keys, fill_data));
@@ -285,11 +306,12 @@ pub async fn log_market_events(sdk: &mut SDKClient, market_events: Vec<PhoenixEv
                 let place_data = vec![
                     maker.to_string(),
                     "".to_string(),
-                    (sdk.ticks_to_float_price(price_in_ticks)).to_string(),
+                    sdk.ticks_to_float_price(&market_pubkey, price_in_ticks)?
+                        .to_string(),
                     format!("{:?}", side),
                     get_decimal_string(
-                        sdk.base_lots_to_base_atoms(base_lots_placed),
-                        sdk.base_decimals,
+                        sdk.base_lots_to_base_atoms(&market_pubkey, base_lots_placed)?,
+                        metadata.base_decimals,
                     ),
                 ];
 
@@ -309,11 +331,12 @@ pub async fn log_market_events(sdk: &mut SDKClient, market_events: Vec<PhoenixEv
                 let reduce_data = vec![
                     maker.to_string(),
                     "".to_string(),
-                    (sdk.ticks_to_float_price(price_in_ticks)).to_string(),
+                    sdk.ticks_to_float_price(&market_pubkey, price_in_ticks)?
+                        .to_string(),
                     format!("{:?}", side),
                     get_decimal_string(
-                        sdk.base_lots_to_base_atoms(base_lots_removed),
-                        sdk.base_decimals,
+                        sdk.base_lots_to_base_atoms(&market_pubkey, base_lots_removed)?,
+                        metadata.base_decimals,
                     ),
                 ];
                 println!("{}", finalize_log(keys, reduce_data));
@@ -324,7 +347,7 @@ pub async fn log_market_events(sdk: &mut SDKClient, market_events: Vec<PhoenixEv
                 } = fill_summary;
                 println!(
                     "Total quote token fees paid: {}",
-                    sdk.quote_atoms_to_quote_unit_as_float(total_quote_fees)
+                    sdk.quote_atoms_to_quote_unit_as_float(&market_pubkey, total_quote_fees)?
                 );
             }
             _ => {
@@ -332,6 +355,7 @@ pub async fn log_market_events(sdk: &mut SDKClient, market_events: Vec<PhoenixEv
             }
         }
     }
+    Ok(())
 }
 pub fn initialize_log(event: &PhoenixEvent, event_type: String) -> Vec<String> {
     let base_schema: Vec<String> = vec![

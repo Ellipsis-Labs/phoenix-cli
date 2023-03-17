@@ -8,7 +8,7 @@ pub async fn process_get_full_book(market_pubkey: &Pubkey, sdk: &SDKClient) -> a
     if book.bids.is_empty() && book.asks.is_empty() {
         println!("Book is empty");
     } else {
-        print_book(sdk, &book);
+        print_book(sdk, market_pubkey, &book)?;
     }
     Ok(())
 }

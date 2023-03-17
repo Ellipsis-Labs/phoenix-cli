@@ -16,6 +16,7 @@ pub async fn process_get_open_orders(
     trader_pubkey: &Pubkey,
     sdk: &SDKClient,
 ) -> anyhow::Result<()> {
+    let meta = sdk.get_market_metadata(market_pubkey);
     // Get market account
     let mut market_and_clock = sdk
         .client
@@ -51,9 +52,10 @@ pub async fn process_get_open_orders(
         .ok_or_else(|| anyhow::anyhow!("Trader not found"))?;
     let book_bids = market.get_book(Side::Bid);
     let book_asks = market.get_book(Side::Ask);
-    let price_precision: usize =
-        get_precision(10_u64.pow(sdk.quote_decimals) / sdk.tick_size_in_quote_atoms_per_base_unit);
-    let size_precision: usize = get_precision(sdk.num_base_lots_per_base_unit);
+    let price_precision: usize = get_precision(
+        10_u64.pow(meta.quote_decimals) / meta.tick_size_in_quote_atoms_per_base_unit,
+    );
+    let size_precision: usize = get_precision(meta.num_base_lots_per_base_unit);
 
     println!("Open Bids");
     let mut open_bids = vec![];
@@ -68,12 +70,13 @@ pub async fn process_get_open_orders(
             }
             open_bids.push(format_open_orders(
                 sdk,
+                market_pubkey,
                 order_id,
                 order,
                 price_precision,
                 size_precision,
                 &clock,
-            ));
+            )?);
         }
     }
     open_bids.iter().for_each(|line| println!("{}", line));
@@ -92,12 +95,13 @@ pub async fn process_get_open_orders(
             }
             open_asks.push(format_open_orders(
                 sdk,
+                market_pubkey,
                 order_id,
                 order,
                 price_precision,
                 size_precision,
                 &clock,
-            ));
+            )?);
         }
     }
     open_asks.iter().for_each(|line| println!("{}", line));
@@ -107,24 +111,26 @@ pub async fn process_get_open_orders(
 
 fn format_open_orders(
     sdk: &SDKClient,
+    market_pubkey: &Pubkey,
     order_id: &FIFOOrderId,
     order: &FIFORestingOrder,
     price_precision: usize,
     size_precision: usize,
     clock: &Clock,
-) -> String {
-    format!(
+) -> anyhow::Result<String> {
+    Ok(format!(
         "{0: <20} | {1: <20} | {2: <10} | {3: <10} | {4: <15} | {5: <15} ",
         order_id.order_sequence_number as i64,
         order_id.price_in_ticks,
         format!(
             "{:.1$}",
-            sdk.ticks_to_float_price(order_id.price_in_ticks.as_u64()),
+            sdk.ticks_to_float_price(market_pubkey, order_id.price_in_ticks.as_u64())?,
             price_precision
         ),
         format!(
             "{:.1$}",
-            order.num_base_lots.as_u64() as f64 * sdk.base_lots_to_base_units_multiplier(),
+            order.num_base_lots.as_u64() as f64
+                * sdk.base_lots_to_base_units_multiplier(market_pubkey)?,
             size_precision,
         ),
         if order.last_valid_slot >= clock.slot {
@@ -138,5 +144,5 @@ fn format_open_orders(
         } else {
             "∞".to_string()
         }
-    )
+    ))
 }

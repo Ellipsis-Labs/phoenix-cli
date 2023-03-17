@@ -5,7 +5,7 @@ use solana_sdk::pubkey::Pubkey;
 use std::mem::size_of;
 
 pub async fn process_get_market(market_pubkey: &Pubkey, sdk: &SDKClient) -> anyhow::Result<()> {
-    let market_metadata = sdk.get_active_market_metadata();
+    let market_metadata = sdk.get_market_metadata(market_pubkey);
 
     let market_account_data = sdk.client.get_account_data(market_pubkey).await?;
     let (header_bytes, market_bytes) = market_account_data.split_at(size_of::<MarketHeader>());
