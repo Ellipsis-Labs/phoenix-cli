@@ -1,12 +1,12 @@
+use crate::helpers::{market_helpers::get_all_markets, print_helpers::print_market_summary_data};
 use anyhow::anyhow;
 use ellipsis_client::EllipsisClient;
 use phoenix::program::MarketHeader;
 use phoenix_sdk::sdk_client::SDKClient;
 use serde::{Deserialize, Serialize};
 use solana_sdk::pubkey::Pubkey;
-use std::{mem::size_of, str::FromStr};
 use std::collections::HashMap;
-use crate::helpers::{market_helpers::get_all_markets, print_helpers::print_market_summary_data};
+use std::{mem::size_of, str::FromStr};
 
 pub async fn process_get_all_markets(client: &EllipsisClient) -> anyhow::Result<()> {
     let accounts = get_all_markets(client).await?;
@@ -36,7 +36,7 @@ pub async fn process_get_all_markets_no_gpa(
 
     for market in markets {
         let market_pubkey = Pubkey::from_str(&market)?;
-        let sdk = SDKClient::new(&market_pubkey, &client.payer, network_url).await;
+        let sdk = SDKClient::new(&client.payer, network_url).await?;
 
         let market_account_data = sdk.client.get_account_data(&market_pubkey).await?;
         let (header_bytes, _market_bytes) = market_account_data.split_at(size_of::<MarketHeader>());
@@ -72,5 +72,8 @@ async fn get_market_config(client: &EllipsisClient) -> anyhow::Result<JsonMarket
 
     let markets: HashMap<String, JsonMarketConfig> = serde_json::from_str(&body)?;
 
-    Ok(markets.get(cluster).ok_or(anyhow!("No markets found for cluster"))?.clone())
+    Ok(markets
+        .get(cluster)
+        .ok_or(anyhow!("No markets found for cluster"))?
+        .clone())
 }

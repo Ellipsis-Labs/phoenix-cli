@@ -1,5 +1,4 @@
 mod command;
-use std::str::FromStr;
 
 use crate::command::PhoenixCLICommand;
 use anyhow::anyhow;
@@ -15,7 +14,6 @@ use phoenix_cli_processor::processor::{
 use phoenix_sdk::sdk_client::*;
 use solana_cli_config::{Config, ConfigInput, CONFIG_FILE};
 use solana_client::nonblocking::rpc_client::RpcClient;
-use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signer::keypair::{read_keypair_file, Keypair};
 use solana_sdk::signer::Signer;
 
@@ -67,9 +65,11 @@ async fn main() -> anyhow::Result<()> {
         &payer,
     )?;
 
+    let mut sdk = SDKClient::new(&payer, network_url).await?;
+
     match cli.command {
         PhoenixCLICommand::GetMarket { market_pubkey } => {
-            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
+            sdk.add_market(&market_pubkey).await?;
             process_get_market(&market_pubkey, &sdk).await?
         }
         PhoenixCLICommand::GetAllMarkets { no_gpa } => {
@@ -80,45 +80,36 @@ async fn main() -> anyhow::Result<()> {
             }
         }
         PhoenixCLICommand::GetTradersForMarket { market_pubkey } => {
-            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
+            sdk.add_market(&market_pubkey).await?;
             process_get_traders_for_market(&market_pubkey, &sdk).await?
         }
         PhoenixCLICommand::GetTopOfBook { market_pubkey } => {
-            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
+            sdk.add_market(&market_pubkey).await?;
             process_get_top_of_book(&market_pubkey, &sdk).await?
         }
         PhoenixCLICommand::GetBookLevels {
             market_pubkey,
             levels,
         } => {
-            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
+            sdk.add_market(&market_pubkey).await?;
             process_get_book_levels(&market_pubkey, &sdk, levels).await?
         }
         PhoenixCLICommand::GetFullBook { market_pubkey } => {
-            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
+            sdk.add_market(&market_pubkey).await?;
             process_get_full_book(&market_pubkey, &sdk).await?
         }
-        PhoenixCLICommand::GetTransaction {
-            signature,
-        } => {
-            let mut dummy_market_pubkey = Pubkey::from_str("14CAwu3LiBBk5fcHGdTsFyVxDwvpgFiSfDwgPJxECcE5").unwrap();
-            let rpc_client = RpcClient::new(network_url.to_string());
-            let acc = rpc_client.get_account(&dummy_market_pubkey).await;
-            if acc.is_err() {
-                dummy_market_pubkey = Pubkey::from_str("7EBrdSbDLvAJEMjigvSrBGkuRNdH9whvzkeojsHSVQib").unwrap(); 
-            }
-            let mut sdk = SDKClient::new(&dummy_market_pubkey, &payer, network_url).await;
+        PhoenixCLICommand::GetTransaction { signature } => {
             process_get_transaction(&signature, &mut sdk).await?
         }
         PhoenixCLICommand::GetMarketStatus { market_pubkey } => {
-            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
+            sdk.add_market(&market_pubkey).await?;
             process_get_market_status(&market_pubkey, &sdk).await?
         }
         PhoenixCLICommand::GetSeatInfo {
             market_pubkey,
             trader_pubkey,
         } => {
-            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
+            sdk.add_market(&market_pubkey).await?;
             process_get_seat_info(
                 &market_pubkey,
                 &trader_pubkey.unwrap_or_else(|| payer.pubkey()),
@@ -130,7 +121,7 @@ async fn main() -> anyhow::Result<()> {
             market_pubkey,
             trader_pubkey,
         } => {
-            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
+            sdk.add_market(&market_pubkey).await?;
             process_get_open_orders(
                 &market_pubkey,
                 &trader_pubkey.unwrap_or_else(|| payer.pubkey()),
@@ -139,7 +130,7 @@ async fn main() -> anyhow::Result<()> {
             .await?
         }
         PhoenixCLICommand::RequestSeat { market_pubkey } => {
-            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
+            sdk.add_market(&market_pubkey).await?;
             process_request_seat(&market_pubkey, &sdk).await?
         }
         PhoenixCLICommand::MintTokens {
@@ -153,9 +144,15 @@ async fn main() -> anyhow::Result<()> {
             base_amount,
             quote_amount,
         } => {
-            let sdk = SDKClient::new(&market_pubkey, &payer, network_url).await;
-            process_mint_tokens_for_market(&sdk, &recipient_pubkey, base_amount, quote_amount)
-                .await?
+            sdk.add_market(&market_pubkey).await?;
+            process_mint_tokens_for_market(
+                &sdk,
+                &market_pubkey,
+                &recipient_pubkey,
+                base_amount,
+                quote_amount,
+            )
+            .await?
         }
     }
 

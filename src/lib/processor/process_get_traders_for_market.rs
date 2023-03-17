@@ -25,12 +25,9 @@ pub async fn process_get_traders_for_market(
     );
 
     // Print trader information
-    market
-        .get_registered_traders()
-        .iter()
-        .for_each(|(pubkey, state)| {
-            print_trader_state(sdk, pubkey, state);
-        });
+    for (pubkey, state) in market.get_registered_traders().iter() {
+        print_trader_state(sdk, market_pubkey, pubkey, state)?;
+    }
 
     Ok(())
 }

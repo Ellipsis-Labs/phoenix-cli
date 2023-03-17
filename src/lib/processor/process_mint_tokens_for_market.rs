@@ -9,12 +9,13 @@ use crate::helpers::devnet_helpers::devnet_token_faucet;
 // Only valid for sandbox devnet markets
 pub async fn process_mint_tokens_for_market(
     sdk: &SDKClient,
+    market_pubkey: &Pubkey,
     recipient_pubkey: &Pubkey,
     base_amount: u64,
     quote_amount: u64,
 ) -> anyhow::Result<()> {
     // Get base and quote mints from market metadata
-    let market_metadata = sdk.get_active_market_metadata();
+    let market_metadata = sdk.get_market_metadata(market_pubkey);
     let base_mint = market_metadata.base_mint;
     let quote_mint = market_metadata.quote_mint;
 
