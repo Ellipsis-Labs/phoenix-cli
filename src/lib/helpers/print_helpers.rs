@@ -12,7 +12,7 @@ use solana_sdk::program_pack::Pack;
 use solana_sdk::pubkey::Pubkey;
 
 pub fn print_book(sdk: &SDKClient, market: &Pubkey, book: &Ladder) -> anyhow::Result<()> {
-    let meta = sdk.get_market_metadata(market);
+    let meta = sdk.get_market_metadata_from_cache(market)?;
     let asks = book.asks.iter().filter_map(|lvl| {
         Some((
             sdk.ticks_to_float_price(market, lvl.price_in_ticks).ok()?,
@@ -120,7 +120,7 @@ pub async fn print_market_details(
     let base_pubkey = market_metadata.base_mint;
     let quote_pubkey = market_metadata.quote_mint;
 
-    let meta = sdk.get_market_metadata(market_pubkey);
+    let meta = sdk.get_market_metadata_from_cache(market_pubkey)?;
 
     let base_vault = get_vault_address(market_pubkey, &base_pubkey).0;
     let quote_vault = get_vault_address(market_pubkey, &quote_pubkey).0;
@@ -219,7 +219,7 @@ pub fn print_trader_state(
     pubkey: &Pubkey,
     state: &TraderState,
 ) -> anyhow::Result<()> {
-    let meta = sdk.get_market_metadata(market_pubkey);
+    let meta = sdk.get_market_metadata_from_cache(market_pubkey)?;
     if state.base_lots_locked == 0
         && state.base_lots_free == 0
         && state.quote_lots_locked == 0
@@ -269,7 +269,7 @@ pub async fn log_market_events(
         if !sdk.markets.contains_key(&market_pubkey) {
             sdk.add_market(&market_pubkey).await?;
         }
-        let metadata = sdk.get_market_metadata(&market_pubkey);
+        let metadata = sdk.get_market_metadata_from_cache(&market_pubkey)?;
         match event.details {
             MarketEventDetails::Fill(fill) => {
                 let Fill {

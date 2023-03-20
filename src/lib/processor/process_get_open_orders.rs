@@ -16,7 +16,7 @@ pub async fn process_get_open_orders(
     trader_pubkey: &Pubkey,
     sdk: &SDKClient,
 ) -> anyhow::Result<()> {
-    let meta = sdk.get_market_metadata(market_pubkey);
+    let meta = sdk.get_market_metadata(market_pubkey).await?;
     // Get market account
     let mut market_and_clock = sdk
         .client
