@@ -127,12 +127,12 @@ pub async fn get_book_levels(
 
     let market_account_data = market_and_clock
         .remove(0)
-        .ok_or(anyhow::Error::msg("Market account not found"))?
+        .ok_or_else(|| anyhow::Error::msg("Market account not found"))?
         .data;
 
     let clock_account_data = market_and_clock
         .remove(0)
-        .ok_or(anyhow::Error::msg("Clock account not found"))?
+        .ok_or_else(|| anyhow::Error::msg("Clock account not found"))?
         .data;
 
     let clock: Clock = bincode::deserialize(&clock_account_data)

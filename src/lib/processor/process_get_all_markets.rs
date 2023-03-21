@@ -74,6 +74,6 @@ async fn get_market_config(client: &EllipsisClient) -> anyhow::Result<JsonMarket
 
     Ok(markets
         .get(cluster)
-        .ok_or(anyhow!("No markets found for cluster"))?
+        .ok_or_else(|| anyhow!("No markets found for cluster"))?
         .clone())
 }
