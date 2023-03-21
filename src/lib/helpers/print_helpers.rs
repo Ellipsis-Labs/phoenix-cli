@@ -13,17 +13,20 @@ use solana_sdk::pubkey::Pubkey;
 
 pub fn print_book(sdk: &SDKClient, market: &Pubkey, book: &Ladder) -> anyhow::Result<()> {
     let meta = sdk.get_market_metadata_from_cache(market)?;
+    let raw_base_units_per_base_lot =
+        meta.base_atoms_per_base_lot as f64 / meta.base_atoms_per_raw_base_unit as f64;
+
     let asks = book.asks.iter().filter_map(|lvl| {
         Some((
             sdk.ticks_to_float_price(market, lvl.price_in_ticks).ok()?,
-            lvl.size_in_base_lots as f64 * sdk.base_lots_to_base_units_multiplier(market).ok()?,
+            lvl.size_in_base_lots as f64 * raw_base_units_per_base_lot,
         ))
     });
 
     let bids = book.bids.iter().filter_map(|lvl| {
         Some((
             sdk.ticks_to_float_price(market, lvl.price_in_ticks).ok()?,
-            lvl.size_in_base_lots as f64 * sdk.base_lots_to_base_units_multiplier(market).ok()?,
+            lvl.size_in_base_lots as f64 * raw_base_units_per_base_lot,
         ))
     });
     let price_precision: usize = get_precision(
@@ -163,13 +166,16 @@ pub async fn print_market_details(
     println!("Quote vault key: {}", market_header.quote_params.vault_key);
 
     println!(
-        "Base Lot Size, in whole units: {}",
-        get_decimal_string(market_metadata.base_lot_size, market_metadata.base_decimals),
+        "Base Lot Size, in raw base units: {}",
+        get_decimal_string(
+            market_metadata.base_atoms_per_base_lot,
+            market_metadata.base_decimals
+        ),
     );
     println!(
-        "Quote Lot Size, in whole units: {}",
+        "Quote Lot Size, in quote units: {}",
         get_decimal_string(
-            market_metadata.quote_lot_size,
+            market_metadata.quote_atoms_per_quote_lot,
             market_metadata.quote_decimals
         )
     );
@@ -347,7 +353,7 @@ pub async fn log_market_events(
                 } = fill_summary;
                 println!(
                     "Total quote token fees paid: {}",
-                    sdk.quote_atoms_to_quote_unit_as_float(&market_pubkey, total_quote_fees)?
+                    sdk.quote_atoms_to_quote_units_as_float(&market_pubkey, total_quote_fees)?
                 );
             }
             _ => {
