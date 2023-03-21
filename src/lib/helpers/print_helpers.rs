@@ -166,14 +166,14 @@ pub async fn print_market_details(
     println!("Quote vault key: {}", market_header.quote_params.vault_key);
 
     println!(
-        "Base Lot Size, in whole units: {}",
+        "Base Lot Size, in raw base units: {}",
         get_decimal_string(
             market_metadata.base_atoms_per_base_lot,
             market_metadata.base_decimals
         ),
     );
     println!(
-        "Quote Lot Size, in whole units: {}",
+        "Quote Lot Size, in quote units: {}",
         get_decimal_string(
             market_metadata.quote_atoms_per_quote_lot,
             market_metadata.quote_decimals
