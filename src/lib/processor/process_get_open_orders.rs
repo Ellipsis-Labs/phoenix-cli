@@ -47,6 +47,9 @@ pub async fn process_get_open_orders(
     // Derserialize data and load into correct type
     let market = load_with_dispatch(&header.market_size_params, market_bytes)?.inner;
 
+    let raw_base_units_per_base_lot =
+        meta.base_atoms_per_base_lot as f64 / meta.base_atoms_per_raw_base_unit as f64;
+
     let trader_index = market
         .get_trader_index(trader_pubkey)
         .ok_or_else(|| anyhow::anyhow!("Trader not found"))?;
@@ -76,6 +79,7 @@ pub async fn process_get_open_orders(
                 price_precision,
                 size_precision,
                 &clock,
+                raw_base_units_per_base_lot,
             )?);
         }
     }
@@ -101,6 +105,7 @@ pub async fn process_get_open_orders(
                 price_precision,
                 size_precision,
                 &clock,
+                raw_base_units_per_base_lot,
             )?);
         }
     }
@@ -117,6 +122,7 @@ fn format_open_orders(
     price_precision: usize,
     size_precision: usize,
     clock: &Clock,
+    raw_base_units_per_base_lot: f64,
 ) -> anyhow::Result<String> {
     Ok(format!(
         "{0: <20} | {1: <20} | {2: <10} | {3: <10} | {4: <15} | {5: <15} ",
@@ -129,8 +135,7 @@ fn format_open_orders(
         ),
         format!(
             "{:.1$}",
-            order.num_base_lots.as_u64() as f64
-                * sdk.base_lots_to_base_units_multiplier(market_pubkey)?,
+            order.num_base_lots.as_u64() as f64 * raw_base_units_per_base_lot,
             size_precision,
         ),
         if order.last_valid_slot >= clock.slot {
