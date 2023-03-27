@@ -8,6 +8,8 @@ use phoenix::state::markets::{Ladder, Market};
 use phoenix::state::OrderPacket;
 
 use phoenix_sdk::sdk_client::*;
+use phoenix_seat_manager::get_seat_manager_address;
+use phoenix_seat_manager::seat_manager::SeatManager;
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig};
 use solana_client::rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType};
@@ -201,4 +203,22 @@ pub async fn get_market_header(
         .map_err(|e| anyhow::anyhow!("Error getting market header. Error: {:?}", e))?;
 
     Ok(*header)
+}
+
+pub async fn get_seat_manager_data_with_market(
+    client: &EllipsisClient,
+    market: &Pubkey,
+) -> anyhow::Result<SeatManager> {
+    let seat_manager_address = get_seat_manager_address(market).0;
+    get_seat_manager_data_with_pubkey(client, &seat_manager_address).await
+}
+
+pub async fn get_seat_manager_data_with_pubkey(
+    client: &EllipsisClient,
+    seat_manager_pubkey: &Pubkey,
+) -> anyhow::Result<SeatManager> {
+    let seat_manager_account = client.get_account(seat_manager_pubkey).await?;
+    let seat_manager_data = SeatManager::load(&seat_manager_account.data)?;
+
+    Ok(*seat_manager_data)
 }
