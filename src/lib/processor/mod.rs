@@ -1,3 +1,5 @@
+pub mod process_claim_seat;
+pub mod process_evict_seat;
 pub mod process_get_all_markets;
 pub mod process_get_book_levels;
 pub mod process_get_full_book;

@@ -4,6 +4,8 @@ use crate::command::PhoenixCLICommand;
 use anyhow::anyhow;
 use clap::Parser;
 use ellipsis_client::EllipsisClient;
+use phoenix_cli_processor::processor::process_claim_seat::process_claim_seat;
+use phoenix_cli_processor::processor::process_evict_seat::process_evict_seat;
 use phoenix_cli_processor::processor::{
     process_get_all_markets::*, process_get_book_levels::*, process_get_full_book::*,
     process_get_market::*, process_get_market_status::*, process_get_open_orders::*,
@@ -157,6 +159,17 @@ async fn main() -> anyhow::Result<()> {
         PhoenixCLICommand::GetSeatManagerInfo { market_pubkey } => {
             sdk.add_market(&market_pubkey).await?;
             process_get_seat_manager_info(&sdk.client, &market_pubkey).await?;
+        }
+        PhoenixCLICommand::ClaimSeat { market_pubkey } => {
+            sdk.add_market(&market_pubkey).await?;
+            process_claim_seat(&sdk.client, &market_pubkey).await?
+        }
+        PhoenixCLICommand::EvictSeat {
+            market_pubkey,
+            trader_to_evict,
+        } => {
+            sdk.add_market(&market_pubkey).await?;
+            process_evict_seat(&sdk.client, &market_pubkey, &trader_to_evict).await?
         }
     }
 

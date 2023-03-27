@@ -27,7 +27,7 @@ pub fn print_seat_manager_struct(seat_manager: &SeatManager, seat_manager_pubkey
     let dmms: Vec<&Pubkey> = seat_manager
         .designated_market_makers
         .iter()
-        .filter(|dmm| dmm != &&Pubkey::default())
+        .filter(|&&dmm| dmm != Pubkey::default())
         .collect();
     if !dmms.is_empty() {
         println!("DMMs: {:?}", dmms);

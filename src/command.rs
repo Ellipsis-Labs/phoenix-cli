@@ -89,4 +89,11 @@ pub enum PhoenixCLICommand {
     GetSeatManagerInfo {
         market_pubkey: Pubkey,
     },
+    ClaimSeat {
+        market_pubkey: Pubkey,
+    },
+    EvictSeat {
+        market_pubkey: Pubkey,
+        trader_to_evict: Option<Pubkey>,
+    },
 }
