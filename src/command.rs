@@ -13,17 +13,11 @@ pub enum PhoenixCLICommand {
         no_gpa: bool,
     },
     /// Get detailed information on a specific market
-    GetMarket {
-        market_pubkey: Pubkey,
-    },
+    GetMarket { market_pubkey: Pubkey },
     /// Get active traders for a given market
-    GetTradersForMarket {
-        market_pubkey: Pubkey,
-    },
+    GetTradersForMarket { market_pubkey: Pubkey },
     /// Get the best bid and ask price for a given market
-    GetTopOfBook {
-        market_pubkey: Pubkey,
-    },
+    GetTopOfBook { market_pubkey: Pubkey },
     /// Get the first N levels of the order book for a given market.
     /// Default is 10 levels
     GetBookLevels {
@@ -32,17 +26,11 @@ pub enum PhoenixCLICommand {
         levels: u64,
     },
     /// Get the full order book for a given market
-    GetFullBook {
-        market_pubkey: Pubkey,
-    },
+    GetFullBook { market_pubkey: Pubkey },
     /// Get the market events that occured in a given transaction signature
-    GetTransaction {
-        signature: Signature,
-    },
+    GetTransaction { signature: Signature },
     /// Get the current status of a market
-    GetMarketStatus {
-        market_pubkey: Pubkey,
-    },
+    GetMarketStatus { market_pubkey: Pubkey },
     /// Get the status and address of a seat for a given market and trader
     GetSeatInfo {
         market_pubkey: Pubkey,
@@ -58,10 +46,9 @@ pub enum PhoenixCLICommand {
         trader_pubkey: Option<Pubkey>,
     },
     /// Send a transaction on chain to allocate a seat for the payer on the given market. This will cost ~.0018 SOL for rent.
-    /// Note that the seat will have to then be approved by the market authority.
-    RequestSeat {
-        market_pubkey: Pubkey,
-    },
+    /// Note that the seat will have to then be approved by the market authority. Only relevant for permissioned markets.
+    /// For permissionless markets (with an automated seat manager), you can claim a seat with the claim-seat CLI command.
+    RequestSeat { market_pubkey: Pubkey },
     /// Mint tokens to a recipient for a given ticker string (for example SOL or USDC). Default amount is 100_000_000_000.
     /// This is only for markets associated with the ellipsis token faucet.
     MintTokens {
@@ -86,12 +73,14 @@ pub enum PhoenixCLICommand {
         #[clap(short, long, required = false, default_value = "100000000")]
         quote_amount: u64,
     },
-    GetSeatManagerInfo {
-        market_pubkey: Pubkey,
-    },
-    ClaimSeat {
-        market_pubkey: Pubkey,
-    },
+    /// For the given market, get the seat manager data fields, including authority, successor, and designated market makers.
+    GetSeatManagerInfo { market_pubkey: Pubkey },
+    /// On the given market, claim a maker seat for the public key of the keypair at the indicated file path.
+    /// Indicate a different keypair file to use by specifying the file path with flag `-k`.
+    ClaimSeat { market_pubkey: Pubkey },
+    /// Evict a trader from the given market if that market's trader state is at capacity.
+    /// If no trader is given, this function will greedily find a trader to evict.
+    /// Note that eviction will not work if the market's trader state is not at capacity.
     EvictSeat {
         market_pubkey: Pubkey,
         trader_to_evict: Option<Pubkey>,
