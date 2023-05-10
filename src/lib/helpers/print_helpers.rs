@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use std::mem::size_of;
 
 use colored::Colorize;
@@ -30,14 +29,16 @@ pub fn print_book(sdk: &SDKClient, market: &Pubkey, book: &Ladder) -> anyhow::Re
         ))
     });
     let price_precision: usize = get_precision(
-        10_u64.pow(meta.quote_decimals) / meta.tick_size_in_quote_atoms_per_base_unit,
+        10_u64.pow(meta.quote_decimals) * meta.raw_base_units_per_base_unit as u64
+            / meta.tick_size_in_quote_atoms_per_base_unit,
     );
-    let size_precision: usize = get_precision(meta.num_base_lots_per_base_unit);
+    let size_precision: usize =
+        get_precision(meta.num_base_lots_per_base_unit / meta.raw_base_units_per_base_unit as u64);
     let bid_strings = bids
         .into_iter()
         .map(|(price, size)| {
-            let p = format!("{:.1$}", price, price_precision);
-            let s = format!("{:.1$}", size, size_precision).green();
+            let p = format_float(price, price_precision);
+            let s = format_float(size, size_precision).green();
             (s, p)
         })
         .collect::<Vec<_>>();
@@ -48,8 +49,8 @@ pub fn print_book(sdk: &SDKClient, market: &Pubkey, book: &Ladder) -> anyhow::Re
         .into_iter()
         .rev()
         .map(|(price, size)| {
-            let p = format!("{:.1$}", price, price_precision);
-            let s = format!("{:.1$}", size, size_precision).red();
+            let p = format_float(price, price_precision);
+            let s = format_float(size, size_precision).red();
             (p, s)
         })
         .collect::<Vec<_>>();
@@ -81,24 +82,39 @@ pub fn print_book(sdk: &SDKClient, market: &Pubkey, book: &Ladder) -> anyhow::Re
 }
 
 pub fn get_precision(mut target: u64) -> usize {
-    let mut prime_factors = BTreeMap::new();
-    let mut candidate = 2;
-    while target > 1 {
-        if target % candidate == 0 {
-            *prime_factors.entry(candidate).or_insert(0) += 1;
-            target /= candidate;
-        } else {
-            candidate += 1;
-        }
+    let mut fives = 0;
+    let mut twos = 0;
+    let initial = target;
+    while target > 0 && target % 5 == 0 {
+        target /= 5;
+        fives += 1;
     }
-    let precision =
-        (*prime_factors.get(&2).unwrap_or(&0)).max(*prime_factors.get(&5).unwrap_or(&0));
-    if precision == 0 {
+    while target > 0 && target % 2 == 0 {
+        target /= 2;
+        twos += 1;
+    }
+    let precision = twos.max(fives);
+    if precision == 0 && initial != 0 {
         // In the off chance that the target does not have 2 or 5 as a prime factor,
         // we'll just return a precision of 3 decimals.
         3
     } else {
         precision
+    }
+}
+
+pub fn format_float(float: f64, precision: usize) -> String {
+    if precision > 3 && float.abs() < 1.0 {
+        // Use scientific notation for small numbers
+        format!("{:.1$e}", float, 3)
+    } else if float > 1e9 {
+        let prefix = format_float(float / 1e9, 3);
+        format!("{}B", prefix)
+    } else if float > 1e6 {
+        let prefix = format_float(float / 1e6, 3);
+        format!("{}M", prefix)
+    } else {
+        format!("{:.1$}", float, precision)
     }
 }
 
