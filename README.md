@@ -13,14 +13,17 @@ CLI for interacting with the Phoenix DEX
 
 ## Installation 
 
-For Linux and MacOS, run the install script from your terminal
+You will need to install Cargo if you don't already have it.
+
+Run the following command in your shell to install it (or visit https://rustup.rs/):
 ```
-bash <(curl -sSf https://raw.githubusercontent.com/Ellipsis-Labs/phoenix-cli/master/phoenix-cli-install.sh)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-Test the installation of cli by running
+To install the Phoenix CLI, run the following in your shell:
+
 ```
-phoenix-cli --help
+cargo install phoenix-cli
 ```
 
 ## Running the CLI
