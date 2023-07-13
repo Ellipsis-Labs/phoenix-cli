@@ -30,7 +30,7 @@ pub async fn process_get_all_markets_no_gpa(
     client: &EllipsisClient,
     network_url: &str,
 ) -> anyhow::Result<()> {
-    let markets = get_market_config(client).await?.markets;
+    let markets = get_market_config(client).await?;
 
     println!("Found {} market(s)", markets.len());
 
@@ -48,12 +48,30 @@ pub async fn process_get_all_markets_no_gpa(
     Ok(())
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-pub struct JsonMarketConfig {
-    pub markets: Vec<String>,
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct MasterConfig {
+    pub tokens: Vec<TokenConfig>,
+    pub markets: Vec<MarketConfig>,
 }
 
-async fn get_market_config(client: &EllipsisClient) -> anyhow::Result<JsonMarketConfig> {
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenConfig {
+    pub name: String,
+    pub symbol: String,
+    pub mint: String,
+    pub logo_uri: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct MarketConfig {
+    pub market: String,
+    pub base_mint: String,
+    pub quote_mint: String,
+}
+
+async fn get_market_config(client: &EllipsisClient) -> anyhow::Result<Vec<String>> {
     let genesis = client.get_genesis_hash().await?;
 
     //hardcoded in the genesis hashes for mainnet and devnet
@@ -64,16 +82,22 @@ async fn get_market_config(client: &EllipsisClient) -> anyhow::Result<JsonMarket
     };
 
     let body = reqwest::get(
-        "https://raw.githubusercontent.com/Ellipsis-Labs/phoenix-sdk/master/markets.json",
+        "https://raw.githubusercontent.com/Ellipsis-Labs/phoenix-sdk/master/master_config.json",
     )
     .await?
     .text()
     .await?;
 
-    let markets: HashMap<String, JsonMarketConfig> = serde_json::from_str(&body)?;
+    let config: HashMap<String, MasterConfig> = serde_json::from_str(&body)?;
 
-    Ok(markets
+    Ok(config
         .get(cluster)
+        .map(|m| {
+            m.markets
+                .iter()
+                .map(|m| m.market.clone())
+                .collect::<Vec<String>>()
+        })
         .ok_or_else(|| anyhow!("No markets found for cluster"))?
         .clone())
 }
