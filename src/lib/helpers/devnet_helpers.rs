@@ -61,8 +61,8 @@ pub mod devnet_token_faucet {
         let create_mint_data = CreateMint { ticker, decimals };
 
         let ix_data: Vec<u8> = [
-            CREAT_MINT_DISCRIMINATOR,
-            create_mint_data.try_to_vec().unwrap().try_into().unwrap(),
+            &CREAT_MINT_DISCRIMINATOR,
+            create_mint_data.try_to_vec().unwrap().as_slice(),
         ]
         .concat();
 
