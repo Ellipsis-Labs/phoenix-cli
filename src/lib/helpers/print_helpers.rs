@@ -182,25 +182,33 @@ pub async fn print_market_details(
     println!("Quote vault key: {}", market_header.quote_params.vault_key);
 
     println!(
-        "Base Lot Size, in raw base units: {}",
+        "Raw base units per base lot: {}",
         get_decimal_string(
             market_metadata.base_atoms_per_base_lot,
             market_metadata.base_decimals
         ),
     );
     println!(
-        "Quote Lot Size, in quote units: {}",
+        "Quote units per quote lot: {}",
         get_decimal_string(
             market_metadata.quote_atoms_per_quote_lot,
             market_metadata.quote_decimals
         )
     );
     println!(
-        "Tick size in quote atoms per base unit: {}",
+        "Tick size in quote units per base unit: {}",
         get_decimal_string(
             market_metadata.tick_size_in_quote_atoms_per_base_unit,
             market_metadata.quote_decimals
         )
+    );
+    println!(
+        "Num base lots per base unit: {}",
+        market_metadata.num_base_lots_per_base_unit,
+    );
+    println!(
+        "Tick size in quote atoms per base unit: {}",
+        market_metadata.tick_size_in_quote_atoms_per_base_unit,
     );
     println!("Taker fees in basis points: {}", taker_fees);
     println!("Fee destination pubkey: {:?}", market_header.fee_recipient);
