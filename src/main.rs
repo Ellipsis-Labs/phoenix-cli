@@ -60,7 +60,8 @@ async fn main() -> anyhow::Result<()> {
     };
     let commitment =
         ConfigInput::compute_commitment_config("", &cli.commitment.unwrap_or(config.commitment)).1;
-    let payer = get_payer_keypair_from_path(&cli.keypair_path.unwrap_or(config.keypair_path))?;
+    let payer = get_payer_keypair_from_path(&cli.keypair_path.unwrap_or(config.keypair_path))
+        .expect("Keypair file does not exist. Please run `solana-keygen new`");
     let network_url = &get_network(&cli.url.unwrap_or(config.json_rpc_url)).to_string();
     let client = EllipsisClient::from_rpc(
         RpcClient::new_with_commitment(network_url.to_string(), commitment),
