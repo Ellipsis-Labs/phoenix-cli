@@ -55,7 +55,6 @@ pub async fn process_get_book_levels(
     let book_bids = market.get_book(Side::Bid);
     let book_asks = market.get_book(Side::Ask);
 
-    println!("Open Bids");
     let mut open_bids = vec![];
     open_bids.push(format!(
         "{0: <20} | {1: <20} | {2: <10} | {3: <10} | {4: <15} | {5: <15} ",
