@@ -18,7 +18,6 @@ pub async fn process_get_book_levels(
     let mut ask_entries: Vec<LadderLevelEntry> = Vec::with_capacity(levels as usize);
     let mut bid_entries: Vec<LadderLevelEntry> = Vec::with_capacity(levels as usize);
 
-    // let meta = sdk.get_market_metadata(market_pubkey).await?;
     // Get market account
     let mut market_and_clock = sdk
         .client
