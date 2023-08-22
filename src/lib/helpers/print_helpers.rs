@@ -81,6 +81,104 @@ pub fn print_book(sdk: &SDKClient, market: &Pubkey, book: &Ladder) -> anyhow::Re
     Ok(())
 }
 
+pub struct LadderLevelEntry {
+    pub tick: u64,
+    pub lots: u64,
+    pub trader_present: bool,
+}
+
+pub fn print_book_with_trader(
+    sdk: &SDKClient,
+    market: &Pubkey,
+    bid_entries: &[LadderLevelEntry],
+    ask_entries: &[LadderLevelEntry],
+) -> anyhow::Result<()> {
+    let meta = sdk.get_market_metadata_from_cache(market)?;
+    let raw_base_units_per_base_lot =
+        meta.base_atoms_per_base_lot as f64 / meta.base_atoms_per_raw_base_unit as f64;
+
+    let asks = ask_entries.iter().filter_map(|lvl| {
+        Some((
+            sdk.ticks_to_float_price(market, lvl.tick).ok()?,
+            lvl.lots as f64 * raw_base_units_per_base_lot,
+            lvl.trader_present,
+        ))
+    });
+
+    let bids = bid_entries.iter().filter_map(|lvl| {
+        Some((
+            sdk.ticks_to_float_price(market, lvl.tick).ok()?,
+            lvl.lots as f64 * raw_base_units_per_base_lot,
+            lvl.trader_present,
+        ))
+    });
+    let price_precision: usize = get_precision(
+        10_u64.pow(meta.quote_decimals) * meta.raw_base_units_per_base_unit as u64
+            / meta.tick_size_in_quote_atoms_per_base_unit,
+    );
+    let size_precision: usize =
+        get_precision(meta.num_base_lots_per_base_unit / meta.raw_base_units_per_base_unit as u64);
+    let bid_strings = bids
+        .into_iter()
+        .map(|(price, size, present)| {
+            let p = format_float(price, price_precision);
+            let s = format_float(size, size_precision).green();
+            let m = if present { "→".green() } else { " ".green() };
+
+            (m, s, p)
+        })
+        .collect::<Vec<_>>();
+
+    let bid_width = bid_strings
+        .iter()
+        .map(|(_, s, _)| s.len())
+        .max()
+        .unwrap_or(0)
+        + 1;
+
+    let ask_strings = asks
+        .into_iter()
+        .rev()
+        .map(|(price, size, present)| {
+            let p = format_float(price, price_precision);
+            let s = format_float(size, size_precision).red();
+            let m = if present { "←".red() } else { " ".red() };
+
+            (p, s, m)
+        })
+        .collect::<Vec<_>>();
+
+    let price_width = bid_strings
+        .iter()
+        .zip(ask_strings.iter())
+        .map(|(a, b)| a.0.len().max(b.1.len()))
+        .max()
+        .unwrap_or(0);
+
+    let ask_width = ask_strings
+        .iter()
+        .map(|(_, s, _)| s.len())
+        .max()
+        .unwrap_or(0)
+        + 1;
+
+    for (price, size, marker) in ask_strings {
+        let str = format!(
+            "  {:bid_width$} {:>price_width$} {:>ask_width$} {marker}",
+            "", price, size
+        );
+        println!("{}", str);
+    }
+    for (marker, size, price) in bid_strings {
+        let str = format!(
+            "{marker} {:>bid_width$} {:>price_width$} {:ask_width$}  ",
+            size, price, ""
+        );
+        println!("{}", str);
+    }
+    Ok(())
+}
+
 pub fn get_precision(mut target: u64) -> usize {
     let mut fives = 0;
     let mut twos = 0;
