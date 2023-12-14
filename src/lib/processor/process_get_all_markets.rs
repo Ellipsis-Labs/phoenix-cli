@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::{mem::size_of, str::FromStr};
 
 pub async fn process_get_all_markets(client: &EllipsisClient) -> anyhow::Result<()> {
+    let config = get_phoenix_config(client).await?;
     let accounts = get_all_markets(client).await?;
 
     println!("Found {} market(s)", accounts.len());
@@ -18,10 +19,26 @@ pub async fn process_get_all_markets(client: &EllipsisClient) -> anyhow::Result<
         let (header_bytes, _market_bytes) =
             market_account.data.split_at_mut(size_of::<MarketHeader>());
 
-        let header = bytemuck::try_from_bytes(header_bytes)
+        let header = bytemuck::try_from_bytes::<MarketHeader>(header_bytes)
             .map_err(|e| anyhow!("Error getting market header. Error: {:?}", e))?;
 
-        print_market_summary_data(&market_pubkey, header);
+        let (base_mint_symbol, quote_mint_symbol) = {
+            let base_mint = header.base_params.mint_key;
+            let quote_mint = header.quote_params.mint_key;
+            (
+                config
+                    .tokens
+                    .iter()
+                    .find(|t| t.mint == base_mint.to_string())
+                    .map(|t| t.symbol.clone()),
+                config
+                    .tokens
+                    .iter()
+                    .find(|t| t.mint == quote_mint.to_string())
+                    .map(|t| t.symbol.clone()),
+            )
+        };
+        print_market_summary_data(&market_pubkey, header, base_mint_symbol, quote_mint_symbol);
     }
     Ok(())
 }
@@ -30,7 +47,13 @@ pub async fn process_get_all_markets_no_gpa(
     client: &EllipsisClient,
     network_url: &str,
 ) -> anyhow::Result<()> {
-    let markets = get_market_config(client).await?;
+    let config = get_phoenix_config(client).await?;
+    let markets = config
+        .markets
+        .iter()
+        .map(|m| m.market.clone())
+        .collect::<Vec<String>>()
+        .clone();
 
     println!("Found {} market(s)", markets.len());
 
@@ -43,7 +66,23 @@ pub async fn process_get_all_markets_no_gpa(
         let header: &MarketHeader = bytemuck::try_from_bytes(header_bytes)
             .map_err(|e| anyhow::anyhow!("Error getting market header. Error: {:?}", e))?;
 
-        print_market_summary_data(&market_pubkey, header);
+        let (base_mint_symbol, quote_mint_symbol) = {
+            let base_mint = header.base_params.mint_key;
+            let quote_mint = header.quote_params.mint_key;
+            (
+                config
+                    .tokens
+                    .iter()
+                    .find(|t| t.mint == base_mint.to_string())
+                    .map(|t| t.symbol.clone()),
+                config
+                    .tokens
+                    .iter()
+                    .find(|t| t.mint == quote_mint.to_string())
+                    .map(|t| t.symbol.clone()),
+            )
+        };
+        print_market_summary_data(&market_pubkey, header, base_mint_symbol, quote_mint_symbol);
     }
     Ok(())
 }
@@ -71,7 +110,7 @@ pub struct MarketConfig {
     pub quote_mint: String,
 }
 
-async fn get_market_config(client: &EllipsisClient) -> anyhow::Result<Vec<String>> {
+pub async fn get_phoenix_config(client: &EllipsisClient) -> anyhow::Result<MasterConfig> {
     let genesis = client.get_genesis_hash().await?;
 
     //hardcoded in the genesis hashes for mainnet and devnet
@@ -92,12 +131,6 @@ async fn get_market_config(client: &EllipsisClient) -> anyhow::Result<Vec<String
 
     Ok(config
         .get(cluster)
-        .map(|m| {
-            m.markets
-                .iter()
-                .map(|m| m.market.clone())
-                .collect::<Vec<String>>()
-        })
-        .ok_or_else(|| anyhow!("No markets found for cluster"))?
+        .ok_or_else(|| anyhow!("Failed to find market config"))?
         .clone())
 }
