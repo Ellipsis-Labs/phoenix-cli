@@ -22,25 +22,30 @@ pub async fn process_get_all_markets(client: &EllipsisClient) -> anyhow::Result<
         let header = bytemuck::try_from_bytes::<MarketHeader>(header_bytes)
             .map_err(|e| anyhow!("Error getting market header. Error: {:?}", e))?;
 
-        let (base_mint_symbol, quote_mint_symbol) = {
-            let base_mint = header.base_params.mint_key;
-            let quote_mint = header.quote_params.mint_key;
-            (
-                config
-                    .tokens
-                    .iter()
-                    .find(|t| t.mint == base_mint.to_string())
-                    .map(|t| t.symbol.clone()),
-                config
-                    .tokens
-                    .iter()
-                    .find(|t| t.mint == quote_mint.to_string())
-                    .map(|t| t.symbol.clone()),
-            )
-        };
+        let (base_mint_symbol, quote_mint_symbol) = get_base_and_quote_symbols(&config, header);
         print_market_summary_data(&market_pubkey, header, base_mint_symbol, quote_mint_symbol);
     }
     Ok(())
+}
+
+pub fn get_base_and_quote_symbols(
+    config: &MasterConfig,
+    header: &MarketHeader,
+) -> (Option<String>, Option<String>) {
+    let base_mint = header.base_params.mint_key;
+    let quote_mint = header.quote_params.mint_key;
+    (
+        config
+            .tokens
+            .iter()
+            .find(|t| t.mint == base_mint.to_string())
+            .map(|t| t.symbol.clone()),
+        config
+            .tokens
+            .iter()
+            .find(|t| t.mint == quote_mint.to_string())
+            .map(|t| t.symbol.clone()),
+    )
 }
 
 pub async fn process_get_all_markets_no_gpa(
@@ -66,22 +71,7 @@ pub async fn process_get_all_markets_no_gpa(
         let header: &MarketHeader = bytemuck::try_from_bytes(header_bytes)
             .map_err(|e| anyhow::anyhow!("Error getting market header. Error: {:?}", e))?;
 
-        let (base_mint_symbol, quote_mint_symbol) = {
-            let base_mint = header.base_params.mint_key;
-            let quote_mint = header.quote_params.mint_key;
-            (
-                config
-                    .tokens
-                    .iter()
-                    .find(|t| t.mint == base_mint.to_string())
-                    .map(|t| t.symbol.clone()),
-                config
-                    .tokens
-                    .iter()
-                    .find(|t| t.mint == quote_mint.to_string())
-                    .map(|t| t.symbol.clone()),
-            )
-        };
+        let (base_mint_symbol, quote_mint_symbol) = get_base_and_quote_symbols(&config, header);
         print_market_summary_data(&market_pubkey, header, base_mint_symbol, quote_mint_symbol);
     }
     Ok(())

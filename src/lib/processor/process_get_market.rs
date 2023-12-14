@@ -4,7 +4,7 @@ use phoenix_sdk::sdk_client::*;
 use solana_sdk::pubkey::Pubkey;
 use std::mem::size_of;
 
-use super::process_get_all_markets::get_phoenix_config;
+use super::process_get_all_markets::{get_base_and_quote_symbols, get_phoenix_config};
 
 pub async fn process_get_market(market_pubkey: &Pubkey, sdk: &SDKClient) -> anyhow::Result<()> {
     let market_metadata = sdk.get_market_metadata(market_pubkey).await?;
@@ -22,20 +22,7 @@ pub async fn process_get_market(market_pubkey: &Pubkey, sdk: &SDKClient) -> anyh
 
     let (base_mint_symbol, quote_mint_symbol) =
         if let Ok(config) = get_phoenix_config(&sdk.client).await {
-            let base_mint = header.base_params.mint_key;
-            let quote_mint = header.quote_params.mint_key;
-            (
-                config
-                    .tokens
-                    .iter()
-                    .find(|t| t.mint == base_mint.to_string())
-                    .map(|t| t.symbol.clone()),
-                config
-                    .tokens
-                    .iter()
-                    .find(|t| t.mint == quote_mint.to_string())
-                    .map(|t| t.symbol.clone()),
-            )
+            get_base_and_quote_symbols(&config, header)
         } else {
             (None, None)
         };
