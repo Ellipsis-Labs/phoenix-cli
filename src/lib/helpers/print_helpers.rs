@@ -216,12 +216,20 @@ pub fn format_float(float: f64, precision: usize) -> String {
     }
 }
 
-pub fn print_market_summary_data(market_pubkey: &Pubkey, header: &MarketHeader) {
+pub fn print_market_summary_data(
+    market_pubkey: &Pubkey,
+    header: &MarketHeader,
+    base_mint_symbol: Option<String>,
+    quote_mint_symbol: Option<String>,
+) {
     let base_pubkey = header.base_params.mint_key;
     let quote_pubkey = header.quote_params.mint_key;
 
     println!("--------------------------------------------");
-    println!("Market: {:?}", market_pubkey);
+    if let (Some(base), Some(quote)) = (base_mint_symbol, quote_mint_symbol) {
+        println!("Market: {}/{}", base, quote);
+    }
+    println!("Market Address: {:?}", market_pubkey);
     println!("Base Token: {:?}", base_pubkey);
     println!("Quote Token: {:?}", quote_pubkey);
     println!("Authority: {:?}", header.authority);
@@ -233,6 +241,8 @@ pub async fn print_market_details(
     market_metadata: &MarketMetadata,
     market_header: &MarketHeader,
     taker_fees: u64,
+    base_mint_symbol: Option<String>,
+    quote_mint_symbol: Option<String>,
 ) -> anyhow::Result<()> {
     let base_pubkey = market_metadata.base_mint;
     let quote_pubkey = market_metadata.quote_mint;
@@ -258,7 +268,10 @@ pub async fn print_market_details(
     let market = load_with_dispatch(&header.market_size_params, market_bytes)?.inner;
 
     println!("--------------------------------------------");
-    println!("Market: {}", market_pubkey);
+    if let (Some(base), Some(quote)) = (base_mint_symbol, quote_mint_symbol) {
+        println!("Market: {}/{}", base, quote);
+    }
+    println!("Market Address: {}", market_pubkey);
     println!("Status: {}", MarketStatus::from(market_header.status));
     println!("Authority: {}", market_header.authority);
     println!("Sequence number: {}", market_header.market_sequence_number);
