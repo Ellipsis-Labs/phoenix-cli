@@ -9,7 +9,13 @@ pub async fn process_get_transaction(
     let events = sdk
         .parse_events_from_transaction(signature)
         .await
-        .ok_or_else(|| anyhow::anyhow!("Failed to parse events from transaction"))?;
+        .ok_or_else(|| anyhow::anyhow!("Failed to find transaction"))?;
+    if events.is_empty() {
+        println!(
+            "Found Transaction: {} \nTransaction has no Trades, Places, or Cancels to log",
+            signature
+        );
+    }
     log_market_events(sdk, events).await?;
     Ok(())
 }

@@ -6,12 +6,13 @@ use phoenix_sdk::utils::get_evictable_trader_ix;
 use phoenix_seat_manager::instruction_builders::{
     create_evict_seat_instruction, EvictTraderAccountBackup,
 };
-use solana_sdk::pubkey::Pubkey;
+use solana_sdk::{instruction::Instruction, pubkey::Pubkey};
 
 pub async fn process_evict_seat(
     client: &EllipsisClient,
     market_pubkey: &Pubkey,
     trader_to_evict: &Option<Pubkey>,
+    prio_fee_instructions: Vec<Instruction>,
 ) -> anyhow::Result<()> {
     let market_bytes = client.get_account_data(market_pubkey).await?;
     let (header_bytes, _market_bytes) = market_bytes.split_at(size_of::<MarketHeader>());
@@ -37,9 +38,11 @@ pub async fn process_evict_seat(
 
     if let Some(evict_trader_ix) = maybe_evict_trader_ix {
         println!("Evicting trader: {}", evict_trader_ix.accounts[13].pubkey);
-        let tx = client
-            .sign_send_instructions(vec![evict_trader_ix], vec![])
-            .await?;
+        let ix_to_send = prio_fee_instructions
+            .into_iter()
+            .chain(vec![evict_trader_ix])
+            .collect::<Vec<Instruction>>();
+        let tx = client.sign_send_instructions(ix_to_send, vec![]).await?;
         println!("Evict trader tx: {}", tx);
     } else {
         println!("Cannot evict a trader when the market's trader state is not full.");

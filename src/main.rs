@@ -16,6 +16,7 @@ use phoenix_cli_processor::processor::{
 use phoenix_sdk::sdk_client::*;
 use solana_cli_config::{Config, ConfigInput, CONFIG_FILE};
 use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_sdk::compute_budget::ComputeBudgetInstruction;
 use solana_sdk::signer::keypair::{read_keypair_file, Keypair};
 use solana_sdk::signer::Signer;
 
@@ -33,6 +34,12 @@ struct Args {
     /// Optionally include a commitment level. Defaults to your Solana CLI config file.
     #[clap(global = true, short, long)]
     commitment: Option<String>,
+    /// Optionally include a priority fee, in how many micro lamports you want to pay per compute unit. Defaults to no priority fee
+    #[clap(global = true, short, long)]
+    prio_fee: Option<u64>,
+    /// Optionally include the number of compute units you want to pay for. Only works if a priority fee is also set. If prio fee is set, this defaults to 1.2 million
+    #[clap(global = true, short, long)]
+    num_compute_units: Option<u32>,
 }
 
 pub fn get_network(network_str: &str) -> &str {
@@ -69,6 +76,17 @@ async fn main() -> anyhow::Result<()> {
     )?;
 
     let mut sdk = SDKClient::new(&payer, network_url).await?;
+
+    let prio_fee_instructions = match cli.prio_fee {
+        Some(compute_unit_price) => {
+            let cu_limit = ComputeBudgetInstruction::set_compute_unit_limit(
+                cli.num_compute_units.unwrap_or(1_200_000),
+            );
+            let cu_price = ComputeBudgetInstruction::set_compute_unit_price(compute_unit_price);
+            vec![cu_limit, cu_price]
+        }
+        None => vec![],
+    };
 
     match cli.command {
         PhoenixCLICommand::GetMarket { market_pubkey } => {
@@ -134,7 +152,7 @@ async fn main() -> anyhow::Result<()> {
         }
         PhoenixCLICommand::RequestSeat { market_pubkey } => {
             sdk.add_market(&market_pubkey).await?;
-            process_request_seat(&market_pubkey, &sdk).await?
+            process_request_seat(&market_pubkey, &sdk, prio_fee_instructions).await?
         }
         PhoenixCLICommand::MintTokens {
             mint_ticker,
@@ -163,14 +181,20 @@ async fn main() -> anyhow::Result<()> {
         }
         PhoenixCLICommand::ClaimSeat { market_pubkey } => {
             sdk.add_market(&market_pubkey).await?;
-            process_claim_seat(&sdk.client, &market_pubkey).await?
+            process_claim_seat(&sdk.client, &market_pubkey, prio_fee_instructions).await?
         }
         PhoenixCLICommand::EvictSeat {
             market_pubkey,
             trader_to_evict,
         } => {
             sdk.add_market(&market_pubkey).await?;
-            process_evict_seat(&sdk.client, &market_pubkey, &trader_to_evict).await?
+            process_evict_seat(
+                &sdk.client,
+                &market_pubkey,
+                &trader_to_evict,
+                prio_fee_instructions,
+            )
+            .await?
         }
     }
 
