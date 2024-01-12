@@ -34,7 +34,7 @@ struct Args {
     /// Optionally include a commitment level. Defaults to your Solana CLI config file.
     #[clap(global = true, short, long)]
     commitment: Option<String>,
-    /// Optionally include a priority fee, in how many micro lamports you want to pay per compute unit. Defaults to no priority fee
+    /// Optionally include a priority fee, in how many micro lamports you want to pay per compute unit. Defaults to no priority fee. Max is 1 million
     #[clap(global = true, short, long)]
     prio_fee: Option<u64>,
     /// Optionally include the number of compute units you want to pay for. Only works if a priority fee is also set. If prio fee is set, this defaults to 1.2 million
@@ -79,9 +79,16 @@ async fn main() -> anyhow::Result<()> {
 
     let prio_fee_instructions = match cli.prio_fee {
         Some(compute_unit_price) => {
-            let cu_limit = ComputeBudgetInstruction::set_compute_unit_limit(
-                cli.num_compute_units.unwrap_or(1_200_000),
+            let num_compute_units = cli.num_compute_units.unwrap_or(1_200_000);
+            assert!(
+                num_compute_units <= 1_200_000,
+                "Number of compute units must be less than 1.2 million"
             );
+            assert!(
+                compute_unit_price <= 1_000_000,
+                "Priority fee must be less than 1 million micro lamports"
+            );
+            let cu_limit = ComputeBudgetInstruction::set_compute_unit_limit(num_compute_units);
             let cu_price = ComputeBudgetInstruction::set_compute_unit_price(compute_unit_price);
             vec![cu_limit, cu_price]
         }
