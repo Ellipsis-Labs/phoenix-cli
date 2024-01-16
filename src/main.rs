@@ -37,7 +37,7 @@ struct Args {
     /// Optionally include a priority fee, in how many micro lamports you want to pay per compute unit. Defaults to no priority fee. Max is 1 million
     #[clap(global = true, short, long)]
     prio_fee: Option<u64>,
-    /// Optionally include the number of compute units you want to pay for. Only works if a priority fee is also set. If prio fee is set, this defaults to 1.2 million
+    /// Optionally include the number of compute units you want to pay for. Only works if a priority fee is also set. If prio fee is set, this defaults to 1.4 million
     #[clap(global = true, short, long)]
     num_compute_units: Option<u32>,
 }
@@ -81,8 +81,8 @@ async fn main() -> anyhow::Result<()> {
         Some(compute_unit_price) => {
             let num_compute_units = cli.num_compute_units.unwrap_or(1_200_000);
             assert!(
-                num_compute_units <= 1_200_000,
-                "Number of compute units must be less than 1.2 million"
+                num_compute_units <= 1_400_000,
+                "Number of compute units must be less than 1.4 million"
             );
             assert!(
                 compute_unit_price <= 1_000_000,
