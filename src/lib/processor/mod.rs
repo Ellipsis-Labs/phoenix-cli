@@ -14,3 +14,4 @@ pub mod process_get_transaction;
 pub mod process_mint_tokens;
 pub mod process_mint_tokens_for_market;
 pub mod process_request_seat;
+pub mod process_get_uncollected_revenue;

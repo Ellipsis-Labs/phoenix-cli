@@ -7,11 +7,7 @@ use ellipsis_client::EllipsisClient;
 use phoenix_cli_processor::processor::process_claim_seat::process_claim_seat;
 use phoenix_cli_processor::processor::process_evict_seat::process_evict_seat;
 use phoenix_cli_processor::processor::{
-    process_get_all_markets::*, process_get_book_levels::*, process_get_full_book::*,
-    process_get_market::*, process_get_market_status::*, process_get_open_orders::*,
-    process_get_seat_info::*, process_get_seat_manager_info::*, process_get_top_of_book::*,
-    process_get_traders_for_market::*, process_get_transaction::*, process_mint_tokens::*,
-    process_mint_tokens_for_market::*, process_request_seat::*,
+    process_get_all_markets::*, process_get_book_levels::*, process_get_full_book::*, process_get_market::*, process_get_market_status::*, process_get_open_orders::*, process_get_seat_info::*, process_get_seat_manager_info::*, process_get_top_of_book::*, process_get_traders_for_market::*, process_get_transaction::*, process_mint_tokens::*, process_mint_tokens_for_market::*, process_request_seat::*, process_get_uncollected_revenue::*
 };
 use phoenix_sdk::sdk_client::*;
 use solana_cli_config::{Config, ConfigInput, CONFIG_FILE};
@@ -171,6 +167,9 @@ async fn main() -> anyhow::Result<()> {
         } => {
             sdk.add_market(&market_pubkey).await?;
             process_evict_seat(&sdk.client, &market_pubkey, &trader_to_evict).await?
+        }
+        PhoenixCLICommand::GetUncollectedRevenue => {
+            process_get_uncollected_revenue(&client, network_url).await?;
         }
     }
 

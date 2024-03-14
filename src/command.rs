@@ -85,4 +85,7 @@ pub enum PhoenixCLICommand {
         market_pubkey: Pubkey,
         trader_to_evict: Option<Pubkey>,
     },
+    /// Retrieves the current uncollected revenue grouped by USDC, USDT, and SOL,
+    /// as well as the total denominated in USDC.
+    GetUncollectedRevenue,
 }
