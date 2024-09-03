@@ -101,7 +101,7 @@ pub struct MarketConfig {
 }
 
 pub async fn get_phoenix_config(client: &EllipsisClient) -> anyhow::Result<MasterConfig> {
-    let genesis = client.get_genesis_hash().await?;
+    let genesis: solana_sdk::hash::Hash = client.get_genesis_hash().await?;
 
     //hardcoded in the genesis hashes for mainnet and devnet
     let cluster = match genesis.to_string().as_str() {
@@ -109,6 +109,13 @@ pub async fn get_phoenix_config(client: &EllipsisClient) -> anyhow::Result<Maste
         "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG" => "devnet",
         _ => "localhost",
     };
+
+    if cluster == "localhost" {
+        return Ok(MasterConfig {
+            tokens: vec![],
+            markets: vec![],
+        });
+    }
 
     let body = reqwest::get(
         "https://raw.githubusercontent.com/Ellipsis-Labs/phoenix-sdk/master/master_config.json",
