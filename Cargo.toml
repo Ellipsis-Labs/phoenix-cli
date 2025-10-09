@@ -1,6 +1,6 @@
 [package]
 name = "phoenix-cli"
-version = "0.3.10"
+version = "0.3.11"
 description = "CLI and associated library for interacting with the Phoenix program from the command line"
 edition = "2021"
 license = "MIT"
@@ -20,7 +20,7 @@ anyhow = "1.0.66"
 clap = { version = "4.0.26", features = ["derive"] }
 shellexpand = "2.1.2"
 solana-sdk = "1.10.32"
-ellipsis-client = "1.0.1"
+ellipsis-client = "=1.0.1"
 solana-client = "1.10.32"
 solana-account-decoder = "1.14.7"
 solana-cli-config = "1.14.7"
