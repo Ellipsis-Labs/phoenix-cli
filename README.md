@@ -1,15 +1,15 @@
 # phoenix-cli
-CLI for interacting with the Phoenix DEX
+CLI for interacting with the Phoenix Legacy DEX
 
 ## Program Deployments
 
 | Program     | Devnet                                         | 
 | ----------- | ---------------------------------------------- |
-| Phoenix Dex | `PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY`  |
+| Phoenix Legacy DEX | `PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY`  |
 
 | Program     | Mainnet                                        | 
 | ----------- | ---------------------------------------------- |
-| Phoenix Dex | `PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY`  |
+| Phoenix Legacy DEX | `PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY`  |
 
 ## Installation 
 
@@ -20,7 +20,7 @@ Run the following command in your shell to install it (or visit https://rustup.r
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-To install the Phoenix CLI, run the following in your shell:
+To install the Phoenix Legacy CLI, run the following in your shell:
 
 ```
 cargo install phoenix-cli
@@ -43,7 +43,7 @@ Optionally include the following parameters when running the cli:
 
 
 ### get-all-markets
-Returns summary information on all markets that exist on Phoenix. Summary information includes market key, base and quote token keys, and authority key. Recommended to use the no-gpa flag to read from a static config file and avoiding making an expensive network call.
+Returns summary information on all markets that exist on Phoenix Legacy. Summary information includes market key, base and quote token keys, and authority key. Recommended to use the no-gpa flag to read from a static config file and avoiding making an expensive network call.
 
 `$ phoenix-cli -u main get-all-markets --no-gpa`
 ```
@@ -226,7 +226,6 @@ Creating ATA for base token
 Creating ATA for quote token
 Tokens minted! Signature: 2mN6o7gBB41UFEboQuCMaeG1t5qQ1uRAvTDoXUhsk1yBoKXQtrXsHVtkQAT9R3oRUSPbhDkZjCQtNtjcYP4TqwVV
 ```
-
 
 
 
