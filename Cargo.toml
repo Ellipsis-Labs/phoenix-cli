@@ -1,7 +1,7 @@
 [package]
 name = "phoenix-cli"
 version = "0.3.14"
-description = "CLI and associated library for interacting with the Phoenix program from the command line"
+description = "CLI and associated library for interacting with the Phoenix Legacy program from the command line"
 edition = "2021"
 license = "MIT"
 

@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# Phoenix CLI binary installation script
+# Phoenix Legacy CLI binary installation script
 #
 # The purpose of this script is to automate the download and installation
-# of Phoenix CLI binary.
+# of Phoenix Legacy CLI binary.
 # 
 # Currently the supported platforms are macOS, Linux
 #
@@ -19,7 +19,7 @@ abort_on_error() {
     fi
 }
 
-CYN  "Phoenix CLI installation script"
+CYN  "Phoenix Legacy CLI installation script"
 echo "---------------------------------------"
 echo ""
 
@@ -69,7 +69,7 @@ abort_on_error $?
 SIZE=$(wc -c "$SOURCE/$DIST" | grep -oE "[0-9]+" | head -n 1)
 
 if [ $SIZE -eq 0 ]; then
-    RED "Aborting: could not download Phoenix distribution"
+    RED "Aborting: could not download Phoenix Legacy distribution"
     exit 1
 fi
 
@@ -86,7 +86,7 @@ if [ ! "$(command -v $BIN)" = "" ]; then
     # replace it
     EXISTING="$(which $BIN)"
 
-    echo "Phoenix binary was found at:"
+    echo "Phoenix Legacy binary was found at:"
     echo "  => $(CYN $EXISTING)"
     echo ""
     echo -n "$(CYN "Replace it? [y/n]") (default 'n'): "
